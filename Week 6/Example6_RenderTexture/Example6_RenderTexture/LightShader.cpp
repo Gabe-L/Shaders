@@ -45,7 +45,6 @@ void LightShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_BUFFER_DESC lightBufferDesc;
-	D3D11_BUFFER_DESC attenuationBufferDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -83,29 +82,15 @@ void LightShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 	lightBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
 
-	//creating control buffer
-	attenuationBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	attenuationBufferDesc.ByteWidth = sizeof(AttenuationBufferType);
-	attenuationBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	attenuationBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	attenuationBufferDesc.MiscFlags = 0;
-	attenuationBufferDesc.StructureByteStride = 0;
-	renderer->CreateBuffer(&attenuationBufferDesc, NULL, &attenuationBuffer);
-
-
 }
 
-XMFLOAT4 float3_to_float4(XMFLOAT3 input, float w_val = 0.f) //converts a float3 to a float4 for padding
-{
-	return XMFLOAT4(input.x, input.y, input.z, w_val);
-}
 
-void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture_two, Light* point_light[2], Light* dir_light[2])
+void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, Light* light)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
-
+	
 	XMMATRIX tworld, tview, tproj;
 
 
@@ -126,41 +111,13 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	LightBufferType* lightPtr;
 	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	lightPtr = (LightBufferType*)mappedResource.pData;
-
-	for (int i = 0; i < 2; i++) {
-		//point lights
-		lightPtr->ambient[i] = point_light[i]->getAmbientColour();
-		lightPtr->diffuse[i] = point_light[i]->getDiffuseColour();
-		lightPtr->position[i] = float3_to_float4(point_light[i]->getPosition());
-
-		//directional lights
-		lightPtr->ambient[i + 2] = dir_light[i]->getAmbientColour();
-		lightPtr->diffuse[i + 2] = dir_light[i]->getDiffuseColour();
-		lightPtr->direction[i] = float3_to_float4(dir_light[i]->getDirection());
-
-	}
-
+	lightPtr->diffuse = light->getDiffuseColour();
+	lightPtr->direction = light->getDirection();
+	lightPtr->padding = 0.0f;
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
-
-	AttenuationBufferType* attPtr;
-	deviceContext->Map(attenuationBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	attPtr = (AttenuationBufferType*)mappedResource.pData;
-	attPtr->constant = 0.5f;
-	attPtr->lin = 0.125f;
-	attPtr->quadratic = 0.f;
-	attPtr->padding = 0.f;
-
-	deviceContext->Unmap(attenuationBuffer, 0);
-	deviceContext->PSSetConstantBuffers(1, 1, &attenuationBuffer);
-
-	// Set resources for vertex shader
-	deviceContext->VSSetShaderResources(0, 1, &texture_two);
-	deviceContext->VSSetSamplers(0, 1, &sampleState);
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
-
-
 }

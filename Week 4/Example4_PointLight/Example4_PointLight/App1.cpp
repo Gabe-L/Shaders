@@ -18,6 +18,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	mesh = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext());
 	mesh_two = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext());
 	textureMgr->loadTexture("brick", L"../res/brick1.dds");
+	textureMgr->loadTexture("height", L"../res/height.png");
 	shader = new LightShader(renderer->getDevice(), hwnd);
 	
 	point_light[0] = new Light;
@@ -108,13 +109,13 @@ bool App1::render()
 
 	// Send geometry data, set shader parameters, render object with shader
 	mesh->sendData(renderer->getDeviceContext());
-	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), point_light, direction_light);
+	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), textureMgr->getTexture("height"),point_light, direction_light);
 	shader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	worldMatrix = XMMatrixMultiply(rotation, translation);
 
 	mesh_two->sendData(renderer->getDeviceContext());
-	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), point_light, direction_light);
+	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), textureMgr->getTexture("height"), point_light, direction_light);
 	shader->render(renderer->getDeviceContext(), mesh_two->getIndexCount());
 
 	// Render GUI
