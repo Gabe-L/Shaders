@@ -5,7 +5,6 @@ EdgeShader::EdgeShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwn
 	initShader(L"onlyLight_vs.cso", L"edge_ps.cso");
 }
 
-
 EdgeShader::~EdgeShader()
 {
 	// Release the sampler state.

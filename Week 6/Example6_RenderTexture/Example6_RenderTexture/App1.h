@@ -8,6 +8,7 @@
 #include "TextureShader.h"
 #include "OnlyLightShader.h"
 #include "EdgeShader.h"
+#include "MiniMapShader.h"
 
 class App1 : public BaseApplication
 {
@@ -32,17 +33,22 @@ private:
 
 	OrthoMesh* orthoMesh;
 	OrthoMesh* orthoMeshTwo;
+	OrthoMesh* orthoMeshThree;
 
 	LightShader* lightShader;
 	TextureShader* textureShader;
 	OnlyLightShader* onlyLightShader;
 	EdgeShader* edgeShader;
+	MiniMapShader* miniMapShader;
 
 	Camera* rtCamera;
 
 	RenderTexture* renderTexture;
 	RenderTexture* renderTextureTwo;
 	RenderTexture* edgeDetectionTexture;
+	RenderTexture* miniMapTexture;
+
+	float rotx, roty, rotz;
 
 	Light* light;
 };

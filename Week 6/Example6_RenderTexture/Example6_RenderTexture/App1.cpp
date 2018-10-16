@@ -17,25 +17,26 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	cubeMesh = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
 	sphereMesh = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext());
-	planeMesh = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext(), 10);
+	planeMesh = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext(), 100);
 
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, -screenWidth / 2.7, screenHeight / 2.7);
-
 	orthoMeshTwo = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, screenWidth / 2.7, screenHeight / 2.7);
+	orthoMeshThree = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, screenWidth / 2.7, -screenHeight / 2.7);
 
 	lightShader = new LightShader(renderer->getDevice(), hwnd);
 	textureShader = new TextureShader(renderer->getDevice(), hwnd);
 	onlyLightShader = new OnlyLightShader(renderer->getDevice(), hwnd);
 	edgeShader = new EdgeShader(renderer->getDevice(), hwnd);
+	miniMapShader = new MiniMapShader(renderer->getDevice(), hwnd);
 
 	renderTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
-
 	renderTextureTwo = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
-
 	edgeDetectionTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+	miniMapTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
 	rtCamera = new Camera();
-	rtCamera->setPosition(0, 0, -10);
+	rtCamera->setRotation(0, 0, 90);
+	rtCamera->setPosition(50, 120, 50);
 
 	light = new Light;
 	light->setAmbientColour(0.0f, 0.0f, 0.0f, 1.0f);
@@ -92,24 +93,22 @@ void App1::firstPass()
 	renderTexture->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
 
 	// Get matrices
-	camera->update();
+	rtCamera->update();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
-	XMMATRIX viewMatrix = camera->getViewMatrix();
+	XMMATRIX viewMatrix = rtCamera->getViewMatrix();
 	XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
 
 	// Render shape with simple lighting shader set.
-	sphereMesh->sendData(renderer->getDeviceContext());
-	onlyLightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, light);
-	//onlyLightShader->render(renderer->getDeviceContext(), sphereMesh->getIndexCount());
+	planeMesh->sendData(renderer->getDeviceContext());
+	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), light);
+	lightShader->render(renderer->getDeviceContext(), planeMesh->getIndexCount());
 
 	edgeDetectionTexture->setRenderTarget(renderer->getDeviceContext());
 	edgeDetectionTexture->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
 
+	miniMapTexture->setRenderTarget(renderer->getDeviceContext());
+	miniMapTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 1.0f, 0.0f, 1.0f);
 
-	// Render shape with simple lighting shader set.
-	cubeMesh->sendData(renderer->getDeviceContext());
-	edgeShader->setShaderParameters(renderer->getDeviceContext(), );
-	onlyLightShader->render(renderer->getDeviceContext(), cubeMesh->getIndexCount());
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	renderer->setBackBufferRenderTarget();
@@ -125,8 +124,6 @@ void App1::finalPass()
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 	XMMATRIX viewMatrix = camera->getViewMatrix();
 	XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
-
-
 
 	// Render normal scene, with light shader set.	
 	planeMesh->sendData(renderer->getDeviceContext());
@@ -144,8 +141,12 @@ void App1::finalPass()
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 
 	orthoMeshTwo->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, renderTextureTwo->getShaderResourceView());
-	textureShader->render(renderer->getDeviceContext(), orthoMeshTwo->getIndexCount());
+	edgeShader->setShaderParameters(renderer->getDeviceContext(), renderTexture->getShaderResourceView());
+	edgeShader->render(renderer->getDeviceContext(), orthoMeshTwo->getIndexCount());
+
+	orthoMeshThree->sendData(renderer->getDeviceContext());
+	miniMapShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, miniMapTexture->getShaderResourceView(), camera->getPosition());
+	miniMapShader->render(renderer->getDeviceContext(), orthoMeshThree->getIndexCount());
 
 	renderer->setZBuffer(true);
 
