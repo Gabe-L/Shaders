@@ -86,7 +86,7 @@ void TextureShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 	tview = XMMatrixTranspose(viewMatrix);
 	tproj = XMMatrixTranspose(projectionMatrix);
 
-	// Sned matrix data
+	// Send matrix data
 	result = deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 	dataPtr->world = tworld;// worldMatrix;

@@ -61,7 +61,7 @@ float4 main(InputType input) : SV_TARGET
 
     float intensity = sqrt(pow(x_total, 2) + pow(y_total, 2)); // find average intensity value between hor and ver difference in intensity
 
-    float4 pixelColour;
+    float4 pixelColour = texture0.Sample(sampler0, input.tex);
 
     pixelColour.x = intensity;
     pixelColour.y = intensity;
@@ -73,7 +73,7 @@ float4 main(InputType input) : SV_TARGET
 
 	//greyscale code
     //float grey = (pixelColour.r + pixelColour.g + pixelColour.b) / 3;
-    
+    //pixelColour = float4(grey, grey, grey, grey);
 
-	return pixelColour;
+    return pixelColour;
 }

@@ -48,6 +48,7 @@ private:
 	RenderTexture* edgeDetectionTexture;
 	RenderTexture* miniMapTexture;
 
+	XMFLOAT2 resolution;
 	float rotx, roty, rotz;
 
 	Light* light;

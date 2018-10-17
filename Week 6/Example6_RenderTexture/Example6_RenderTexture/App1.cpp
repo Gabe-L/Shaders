@@ -22,6 +22,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, -screenWidth / 2.7, screenHeight / 2.7);
 	orthoMeshTwo = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, screenWidth / 2.7, screenHeight / 2.7);
 	orthoMeshThree = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth / 4, screenHeight / 4, screenWidth / 2.7, -screenHeight / 2.7);
+	resolution = XMFLOAT2((float)screenWidth / 4, (float)screenHeight / 4);
 
 	lightShader = new LightShader(renderer->getDevice(), hwnd);
 	textureShader = new TextureShader(renderer->getDevice(), hwnd);
@@ -42,6 +43,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	light->setAmbientColour(0.0f, 0.0f, 0.0f, 1.0f);
 	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
 	light->setDirection(0.7f, -0.7f, 0.7f);
+
 }
 
 
@@ -88,27 +90,37 @@ bool App1::render()
 
 void App1::firstPass()
 {
-	// Set the render target to be the render to texture and clear it
-	renderTexture->setRenderTarget(renderer->getDeviceContext());
-	renderTexture->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
-
 	// Get matrices
 	rtCamera->update();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 	XMMATRIX viewMatrix = rtCamera->getViewMatrix();
 	XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
 
+
+	// Top down render texture
+	// Set the render target to be the render to texture and clear it
+	renderTexture->setRenderTarget(renderer->getDeviceContext());
+	renderTexture->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
+
 	// Render shape with simple lighting shader set.
 	planeMesh->sendData(renderer->getDeviceContext());
 	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), light);
 	lightShader->render(renderer->getDeviceContext(), planeMesh->getIndexCount());
 
-	edgeDetectionTexture->setRenderTarget(renderer->getDeviceContext());
-	edgeDetectionTexture->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
 
+	// Edge detection render texture
+	edgeDetectionTexture->setRenderTarget(renderer->getDeviceContext());
+	edgeDetectionTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
+
+	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), light);
+	lightShader->render(renderer->getDeviceContext(), (planeMesh->getIndexCount()));
+
+	// Minimap render texture
 	miniMapTexture->setRenderTarget(renderer->getDeviceContext());
 	miniMapTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 1.0f, 0.0f, 1.0f);
-
+	
+	miniMapShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), camera->getPosition(), resolution);
+	miniMapShader->render(renderer->getDeviceContext(), planeMesh->getIndexCount());
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	renderer->setBackBufferRenderTarget();
@@ -141,12 +153,12 @@ void App1::finalPass()
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 
 	orthoMeshTwo->sendData(renderer->getDeviceContext());
-	edgeShader->setShaderParameters(renderer->getDeviceContext(), renderTexture->getShaderResourceView());
+	edgeShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, edgeDetectionTexture->getShaderResourceView());
 	edgeShader->render(renderer->getDeviceContext(), orthoMeshTwo->getIndexCount());
 
 	orthoMeshThree->sendData(renderer->getDeviceContext());
-	miniMapShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, miniMapTexture->getShaderResourceView(), camera->getPosition());
-	miniMapShader->render(renderer->getDeviceContext(), orthoMeshThree->getIndexCount());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, miniMapTexture->getShaderResourceView());
+	textureShader->render(renderer->getDeviceContext(), orthoMeshThree->getIndexCount());
 
 	renderer->setZBuffer(true);
 
@@ -172,4 +184,3 @@ void App1::gui()
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
-

@@ -21,6 +21,13 @@ MiniMapShader::~MiniMapShader()
 		matrixBuffer = 0;
 	}
 
+	//// Release the camera buffer
+	//if (cameraBuffer)
+	//{
+	//	cameraBuffer->Release();
+	//	cameraBuffer = 0;
+	//}
+
 	// Release the layout.
 	if (layout)
 	{
@@ -36,9 +43,8 @@ MiniMapShader::~MiniMapShader()
 void MiniMapShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 {
 	D3D11_BUFFER_DESC matrixBufferDesc;
-	D3D11_BUFFER_DESC cameraBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
-	D3D11_BUFFER_DESC lightBufferDesc;
+	D3D11_BUFFER_DESC cameraBufferDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -77,23 +83,25 @@ void MiniMapShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 
 }
 
-void MiniMapShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 camPos)
+void MiniMapShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 camPos, XMFLOAT2 resolution)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
-
 	XMMATRIX tworld, tview, tproj;
 
 	// Transpose the matrices to prepare them for the shader.
 	tworld = XMMatrixTranspose(worldMatrix);
 	tview = XMMatrixTranspose(viewMatrix);
 	tproj = XMMatrixTranspose(projectionMatrix);
+
+	// Send matrix data
 	result = deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 	dataPtr->world = tworld;// worldMatrix;
 	dataPtr->view = tview;
 	dataPtr->projection = tproj;
+
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
@@ -102,6 +110,8 @@ void MiniMapShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 	deviceContext->Map(cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	camPtr = (CameraBufferType*)mappedResource.pData;
 	camPtr->cameraPosition = XMFLOAT4(camPos.x, camPos.y, camPos.z, 1.0f);
+	camPtr->resolution = resolution;
+	camPtr->padding = XMFLOAT2(0, 0);
 
 	deviceContext->Unmap(cameraBuffer, 0);
 	deviceContext->VSSetConstantBuffers(1, 1, &cameraBuffer);
