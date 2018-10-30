@@ -24,6 +24,7 @@ TextureShader::~TextureShader()
 		matrixBuffer = 0;
 	}
 
+
 	// Release the layout.
 	if (layout)
 	{
