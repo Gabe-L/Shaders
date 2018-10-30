@@ -22,17 +22,26 @@ public:
 protected:
 	bool render();
 	void firstPass();
+	void downSample();
 	void verticalBlur();
 	void horizontalBlur();
+	void upSample();
 	void finalPass();
 	void gui();
 
 private:
+
+	float downSampleX, downSampleY;
+
 	CubeMesh* cubeMesh;
 	OrthoMesh* orthoMesh;
+	OrthoMesh* smallOrthoMesh;
+
 	LightShader* lightShader;
 	TextureShader* textureShader;
 
+	RenderTexture* downSampleTexture;
+	RenderTexture* upSampleTexture;
 	RenderTexture* renderTexture;
 	RenderTexture* horizontalBlurTexture;
 	RenderTexture* verticalBlurTexture;

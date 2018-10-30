@@ -19,11 +19,17 @@ float4 main(InputType input) : SV_TARGET
     float4 colour;
 
 	// Create the weights that each neighbor pixel will contribute to the blur.
-	weight0 = 0.382928;
-	weight1 = 0.241732;
-	weight2 = 0.060598;
-	weight3 = 0.005977;
-	weight4 = 0.000229;
+    //weight0 = 0.382928;
+    //weight1 = 0.241732;
+    //weight2 = 0.060598;
+    //weight3 = 0.005977;
+    //weight4 = 0.000229;
+
+    weight0 = 0.6;
+    weight1 = 0.1;
+    weight2 = 0.05;
+    weight3 = 0.025;
+    weight4 = 0.025;
 
 	// Initialize the colour to black.
     colour = float4(0.0f, 0.0f, 0.0f, 0.0f);
