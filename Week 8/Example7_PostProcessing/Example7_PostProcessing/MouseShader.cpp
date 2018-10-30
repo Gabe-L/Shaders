@@ -1,14 +1,14 @@
-#include "TextureShader.h"
+#include "MouseShader.h"
 
 
 
-TextureShader::TextureShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
+MouseShader::MouseShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
-	initShader(L"texture_vs.cso", L"texture_ps.cso");
+	initShader(L"texture_vs.cso", L"mouseHighlight_ps.cso");
 }
 
 
-TextureShader::~TextureShader()
+MouseShader::~MouseShader()
 {
 	// Release the sampler state.
 	if (sampleState)
@@ -32,14 +32,21 @@ TextureShader::~TextureShader()
 		layout = 0;
 	}
 
+	// Release the mouse buffer
+	if (mouseBuffer) {
+		mouseBuffer->Release();
+		mouseBuffer = 0;
+	}
+
 	//Release base shader components
 	BaseShader::~BaseShader();
 }
 
 
-void TextureShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
+void MouseShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 {
 	D3D11_BUFFER_DESC matrixBufferDesc;
+	D3D11_BUFFER_DESC mouseBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 
 	// Load (+ compile) shader files
@@ -56,6 +63,15 @@ void TextureShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 
 	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
+
+	// Creating mouse buffer
+	mouseBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	mouseBufferDesc.ByteWidth = sizeof(MouseBufferType);
+	mouseBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	mouseBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	mouseBufferDesc.MiscFlags = 0;
+	mouseBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&mouseBufferDesc, NULL, &mouseBuffer);
 
 	// Create a texture sampler state description.
 	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
@@ -74,7 +90,7 @@ void TextureShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 }
 
 
-void TextureShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture)
+void MouseShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -86,7 +102,7 @@ void TextureShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 	tview = XMMatrixTranspose(viewMatrix);
 	tproj = XMMatrixTranspose(projectionMatrix);
 
-	// Sned matrix data
+	// Send matrix data
 	result = deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 	dataPtr->world = tworld;// worldMatrix;
@@ -94,6 +110,19 @@ void TextureShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 	dataPtr->projection = tproj;
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
+
+	// Send mouse data
+	MouseBufferType* mousePtr;
+	deviceContext->Map(mouseBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	mousePtr = (MouseBufferType*)mappedResource.pData;
+	
+	ScreenToClient(hwnd, &mousePos);
+	mousePtr->mousePos.x = float(mousePos.x);
+	mousePtr->mousePos.y = float(mousePos.y);
+
+	mousePtr->padding = XMFLOAT2(0.0f, 0.0f);
+	deviceContext->Unmap(mouseBuffer, 0);
+	deviceContext->PSSetConstantBuffers(0, 1, &mouseBuffer);
 
 	// Set shader texture and sampler resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);

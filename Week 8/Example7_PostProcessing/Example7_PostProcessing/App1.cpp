@@ -23,7 +23,9 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureShader = new TextureShader(renderer->getDevice(), hwnd);
 	horizontalBlurShader = new HorizontalBlurShader(renderer->getDevice(), hwnd);
 	verticalBlurShader = new VerticalBlurShader(renderer->getDevice(), hwnd);
-	
+	mouseShader = new MouseShader(renderer->getDevice(), hwnd);
+
+
 	downSampleTexture = new RenderTexture(renderer->getDevice(), downSampleX, downSampleY, SCREEN_NEAR, SCREEN_DEPTH);
 	renderTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
@@ -31,6 +33,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	verticalBlurTexture = new RenderTexture(renderer->getDevice(), downSampleX, downSampleY, SCREEN_NEAR, SCREEN_DEPTH);
 
 	upSampleTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+
+	mouseTexture = new RenderTexture(renderer->getDevice(), downSampleX, downSampleY, SCREEN_NEAR, SCREEN_DEPTH);
 
 	light = new Light;
 	light->setAmbientColour(0.0f, 0.0f, 0.0f, 1.0f);
@@ -78,6 +82,7 @@ bool App1::render()
 	horizontalBlur();
 	// Apply vertical blur to the horizontal blur stage
 	verticalBlur();
+	mouseHighlight();
 	upSample();
 	// Render final pass to frame buffer
 	finalPass();
@@ -175,6 +180,29 @@ void App1::verticalBlur()
 	renderer->setBackBufferRenderTarget();
 }
 
+void App1::mouseHighlight()
+{
+	XMMATRIX worldMatrix, baseViewMatrix, orthoMatrix;
+
+	mouseTexture->setRenderTarget(renderer->getDeviceContext());
+	mouseTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 1.0f, 1.0f, 1.0f);
+
+	worldMatrix = renderer->getWorldMatrix();
+	baseViewMatrix = camera->getOrthoViewMatrix();
+	// Get the ortho matrix from the render to texture since texture has different dimensions being that it is smaller.
+	orthoMatrix = mouseTexture->getOrthoMatrix();
+
+	// Render for Vertical Blur
+	renderer->setZBuffer(false);
+	smallOrthoMesh->sendData(renderer->getDeviceContext());
+	mouseShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, verticalBlurTexture->getShaderResourceView());
+	mouseShader->render(renderer->getDeviceContext(), smallOrthoMesh->getIndexCount());
+	renderer->setZBuffer(true);
+
+	// Reset the render target back to the original back buffer and not the render to texture anymore.
+	renderer->setBackBufferRenderTarget();
+}
+
 void App1::upSample()
 {
 	XMMATRIX worldMatrix, baseViewMatrix, orthoMatrix;
@@ -189,7 +217,7 @@ void App1::upSample()
 	// Render for up sample
 	renderer->setZBuffer(false);
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, verticalBlurTexture->getShaderResourceView());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, mouseTexture->getShaderResourceView());
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 

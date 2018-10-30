@@ -131,6 +131,7 @@
     <ClCompile Include="HorizontalBlurShader.cpp" />
     <ClCompile Include="LightShader.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MouseShader.cpp" />
     <ClCompile Include="TextureShader.cpp" />
     <ClCompile Include="VerticalBlurShader.cpp" />
   </ItemGroup>
@@ -138,6 +139,7 @@
     <ClInclude Include="App1.h" />
     <ClInclude Include="HorizontalBlurShader.h" />
     <ClInclude Include="LightShader.h" />
+    <ClInclude Include="MouseShader.h" />
     <ClInclude Include="TextureShader.h" />
     <ClInclude Include="VerticalBlurShader.h" />
   </ItemGroup>
@@ -157,6 +159,12 @@
     <FxCompile Include="light_vs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="mouseHighlight_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="texture_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>

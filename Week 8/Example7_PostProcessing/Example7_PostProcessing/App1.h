@@ -8,6 +8,7 @@
 #include "TextureShader.h"
 #include "VerticalBlurShader.h"
 #include "HorizontalBlurShader.h"
+#include "MouseShader.h"
 
 class App1 : public BaseApplication
 {
@@ -25,6 +26,7 @@ protected:
 	void downSample();
 	void verticalBlur();
 	void horizontalBlur();
+	void mouseHighlight();
 	void upSample();
 	void finalPass();
 	void gui();
@@ -39,15 +41,17 @@ private:
 
 	LightShader* lightShader;
 	TextureShader* textureShader;
+	VerticalBlurShader* verticalBlurShader;
+	HorizontalBlurShader* horizontalBlurShader;
+	MouseShader* mouseShader;
 
 	RenderTexture* downSampleTexture;
 	RenderTexture* upSampleTexture;
+	RenderTexture* mouseTexture;
 	RenderTexture* renderTexture;
 	RenderTexture* horizontalBlurTexture;
 	RenderTexture* verticalBlurTexture;
-	VerticalBlurShader* verticalBlurShader;
-	HorizontalBlurShader* horizontalBlurShader;
-	
+
 	Light* light;
 };
 
