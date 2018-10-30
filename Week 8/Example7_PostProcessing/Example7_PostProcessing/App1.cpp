@@ -41,7 +41,7 @@ App1::~App1()
 }
 
 
-bool App1::frame()
+bool App1::frame()	
 {
 	bool result;
 
