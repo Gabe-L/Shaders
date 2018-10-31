@@ -12,9 +12,10 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	downSampleX = screenWidth * (3.f / 4);
 	downSampleY = screenHeight * (3.f / 4);
+	resolution = XMFLOAT2(screenWidth, screenHeight);
 
 	// Create Mesh object and shader object
-	textureMgr->loadTexture("brick", L"res/brick1.dds");
+	textureMgr->loadTexture("brick", L"res/wood.png");
 	cubeMesh = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);	// Full screen size
 	smallOrthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), downSampleX, downSampleY);	// Small screen size
@@ -195,7 +196,7 @@ void App1::mouseHighlight()
 	// Render for Vertical Blur
 	renderer->setZBuffer(false);
 	smallOrthoMesh->sendData(renderer->getDeviceContext());
-	mouseShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, verticalBlurTexture->getShaderResourceView());
+	mouseShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, verticalBlurTexture->getShaderResourceView(), XMFLOAT2(input->getMouseX(), input->getMouseY()), resolution);
 	mouseShader->render(renderer->getDeviceContext(), smallOrthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 

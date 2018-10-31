@@ -90,7 +90,7 @@ void MouseShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 }
 
 
-void MouseShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture)
+void MouseShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT2 mousePos, XMFLOAT2 resolution)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -116,11 +116,9 @@ void MouseShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	deviceContext->Map(mouseBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	mousePtr = (MouseBufferType*)mappedResource.pData;
 	
-	ScreenToClient(hwnd, &mousePos);
-	mousePtr->mousePos.x = float(mousePos.x);
-	mousePtr->mousePos.y = float(mousePos.y);
+	mousePtr->mousePos = mousePos;
+	mousePtr->resolution = resolution;
 
-	mousePtr->padding = XMFLOAT2(0.0f, 0.0f);
 	deviceContext->Unmap(mouseBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &mouseBuffer);
 

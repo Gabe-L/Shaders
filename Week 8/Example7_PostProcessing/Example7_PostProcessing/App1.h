@@ -34,6 +34,7 @@ protected:
 private:
 
 	float downSampleX, downSampleY;
+	XMFLOAT2 resolution;
 
 	CubeMesh* cubeMesh;
 	OrthoMesh* orthoMesh;

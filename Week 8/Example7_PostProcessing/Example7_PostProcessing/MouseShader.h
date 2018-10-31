@@ -11,16 +11,14 @@ private:
 	struct MouseBufferType
 	{
 		XMFLOAT2 mousePos;
-		XMFLOAT2 padding;
+		XMFLOAT2 resolution;
 	};
-
-	POINT mousePos;
 
 public:
 	MouseShader(ID3D11Device* device, HWND hwnd);
 	~MouseShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, XMFLOAT2 mousePos, XMFLOAT2 resolution);
 
 private:
 	void initShader(WCHAR*, WCHAR*);
