@@ -83,7 +83,7 @@ void HorizontalBlurShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 }
 
 
-void HorizontalBlurShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, float width)
+void HorizontalBlurShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, float width, float scale)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
@@ -108,7 +108,8 @@ void HorizontalBlurShader::setShaderParameters(ID3D11DeviceContext* deviceContex
 	deviceContext->Map(screenSizeBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	widthPtr = (ScreenSizeBufferType*)mappedResource.pData;
 	widthPtr->screenWidth = width;
-	widthPtr->padding = XMFLOAT3(1.0f, 1.f, 1.f);
+	widthPtr->scale = scale;
+	widthPtr->padding = XMFLOAT2(1.0f, 1.f);
 	deviceContext->Unmap(screenSizeBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &screenSizeBuffer);
 

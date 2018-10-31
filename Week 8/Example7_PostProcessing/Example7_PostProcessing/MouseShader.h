@@ -28,4 +28,3 @@ private:
 	ID3D11SamplerState* sampleState;
 	ID3D11Buffer* mouseBuffer;
 };
-

@@ -37,6 +37,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	mouseTexture = new RenderTexture(renderer->getDevice(), downSampleX, downSampleY, SCREEN_NEAR, SCREEN_DEPTH);
 
+	blurDirection = 0.f;
+
 	light = new Light;
 	light->setAmbientColour(0.0f, 0.0f, 0.0f, 1.0f);
 	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
@@ -149,7 +151,7 @@ void App1::horizontalBlur()
 	// Render for Horizontal Blur
 	renderer->setZBuffer(false);
 	smallOrthoMesh->sendData(renderer->getDeviceContext());
-	horizontalBlurShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, downSampleTexture->getShaderResourceView(), screenSizeX);
+	horizontalBlurShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, downSampleTexture->getShaderResourceView(), screenSizeX, horScale);
 	horizontalBlurShader->render(renderer->getDeviceContext(), smallOrthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -173,7 +175,7 @@ void App1::verticalBlur()
 	// Render for Vertical Blur
 	renderer->setZBuffer(false);
 	smallOrthoMesh->sendData(renderer->getDeviceContext());
-	verticalBlurShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, horizontalBlurTexture->getShaderResourceView(), screenSizeY);
+	verticalBlurShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, horizontalBlurTexture->getShaderResourceView(), screenSizeY, verScale);
 	verticalBlurShader->render(renderer->getDeviceContext(), smallOrthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -260,6 +262,14 @@ void App1::gui()
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
+	ImGui::SliderAngle("Blur direction: ", &blurDirection, 0);
+	ImGui::SliderFloat("Blur distance: ", &blurDist, 0.f, 5.f);
+
+	horScale = blurDist * sinf(blurDirection);
+	verScale = blurDist * cosf(blurDirection);
+
+	//ImGui::SliderFloat("Hor: ", &horScale, 0.f, 1.f);
+	//ImGui::SliderFloat("Ver: ", &verScale, 0.f, 1.f);
 
 	// Render UI
 	ImGui::Render();

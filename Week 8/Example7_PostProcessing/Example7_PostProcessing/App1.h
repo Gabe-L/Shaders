@@ -35,6 +35,9 @@ private:
 
 	float downSampleX, downSampleY;
 	XMFLOAT2 resolution;
+	float blurDirection;
+	float blurDist;
+	float horScale, verScale;
 
 	CubeMesh* cubeMesh;
 	OrthoMesh* orthoMesh;

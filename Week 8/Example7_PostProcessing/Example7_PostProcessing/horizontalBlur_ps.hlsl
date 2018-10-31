@@ -4,7 +4,8 @@ SamplerState SampleType : register(s0);
 cbuffer ScreenSizeBuffer : register(b0)
 {
     float screenWidth;
-    float3 padding;
+    float scale;
+    float2 padding;
 };
 
 struct InputType
@@ -19,17 +20,19 @@ float4 main(InputType input) : SV_TARGET
     float4 colour;
 
 	// Create the weights that each neighbor pixel will contribute to the blur.
-    //weight0 = 0.382928;
-    //weight1 = 0.241732;
-    //weight2 = 0.060598;
-    //weight3 = 0.005977;
-    //weight4 = 0.000229;
+    weight0 = 0.382928 * scale;
+    weight1 = 0.241732 * scale;
+    weight2 = 0.060598 * scale;
+    weight3 = 0.005977 * scale;
+    weight4 = 0.000229 * scale;
 
-    weight0 = 0.6;
-    weight1 = 0.1;
-    weight2 = 0.05;
-    weight3 = 0.025;
-    weight4 = 0.025;
+    float remainder = 1.f - (weight0 + 2 * (weight1 + weight2 + weight3 + weight4));
+
+    //weight0 = 0.6;
+    //weight1 = 0.1;
+    //weight2 = 0.05;
+    //weight3 = 0.025;
+    //weight4 = 0.025;
 
 	// Initialize the colour to black.
     colour = float4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -45,6 +48,8 @@ float4 main(InputType input) : SV_TARGET
 	colour += shaderTexture.Sample(SampleType, input.tex + float2(texelSize * 2.0f, 0.0f)) * weight2;
 	colour += shaderTexture.Sample(SampleType, input.tex + float2(texelSize * 3.0f, 0.0f)) * weight3;
 	colour += shaderTexture.Sample(SampleType, input.tex + float2(texelSize * 4.0f, 0.0f)) * weight4;
+
+    colour += shaderTexture.Sample(SampleType, input.tex) * remainder;
 
 	// Set the alpha channel to one.
     colour.a = 1.0f;

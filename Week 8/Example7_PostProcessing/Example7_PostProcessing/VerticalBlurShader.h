@@ -14,7 +14,8 @@ private:
 	struct ScreenSizeBufferType
 	{
 		float screenHeight;
-		XMFLOAT3 padding;
+		float scale;
+		XMFLOAT2 padding;
 	};
 
 public:
@@ -22,7 +23,7 @@ public:
 	VerticalBlurShader(ID3D11Device* device, HWND hwnd);
 	~VerticalBlurShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, float width);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, float width, float scale);
 
 private:
 	void initShader(WCHAR*, WCHAR*);
