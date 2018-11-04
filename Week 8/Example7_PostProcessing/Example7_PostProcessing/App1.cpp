@@ -85,7 +85,7 @@ bool App1::render()
 	horizontalBlur();
 	// Apply vertical blur to the horizontal blur stage
 	verticalBlur();
-	mouseHighlight();
+	//mouseHighlight();
 	upSample();
 	// Render final pass to frame buffer
 	finalPass();
@@ -220,7 +220,7 @@ void App1::upSample()
 	// Render for up sample
 	renderer->setZBuffer(false);
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, mouseTexture->getShaderResourceView());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, verticalBlurTexture->getShaderResourceView());
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 
