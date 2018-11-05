@@ -28,6 +28,7 @@ private:
 	Light* light;
 
 	float timeTrack;
+	float explodeOffset;
 
 };
 

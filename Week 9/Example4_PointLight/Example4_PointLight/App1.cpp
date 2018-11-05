@@ -14,17 +14,17 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	// Create Mesh object and shader object
-	explosionMesh = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext(), 200);
+	explosionMesh = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext(), 100);
 	textureMgr->loadTexture("compose", L"../res/smoke-compose.png");
 	textureMgr->loadTexture("burn", L"../res/burn.png");
 	shader = new LightShader(renderer->getDevice(), hwnd);
 	light = new Light;
 	light->setAmbientColour(0.5f, 0.5f, 0.5f, 1.0f);
 	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
-	light->setPosition(50.0f, 10.0f, 50.0f);
+	light->setPosition(0.0f, 0.0f, 0.0f);
 
 	timeTrack = 0.0f;
-
+	explodeOffset = 0.0f;
 
 }
 
@@ -88,7 +88,7 @@ bool App1::render()
 
 	// Send geometry data, set shader parameters, render object with shader
 	explosionMesh->sendData(renderer->getDeviceContext());
-	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("compose"), textureMgr->getTexture("burn"), light, timeTrack);
+	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("compose"), textureMgr->getTexture("burn"), light, timeTrack, explodeOffset);
 	shader->render(renderer->getDeviceContext(), explosionMesh->getIndexCount());
 
 	// Render GUI
@@ -110,7 +110,7 @@ void App1::gui()
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
-	ImGui::Text("Press E to raise camera \nto see the plane being rendered");
+	ImGui::SliderFloat("Explode Offset: ", &explodeOffset, 0.0f, 1.0f);
 
 	// Render UI
 	ImGui::Render();

@@ -104,7 +104,7 @@ void LightShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 }
 
 
-void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture_two, Light* light, float time)
+void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture_two, Light* light, float time, float explodeOffset)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -142,8 +142,21 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	deviceContext->Map(timeBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	timePtr = (TimeBufferType*)mappedResource.pData;
 
-	timePtr->time = time;
-	timePtr->padding = XMFLOAT3(0, 0, 0);
+	XMFLOAT4 displacement;
+
+	displacement.x = sinf((time) * (2 * 3.141f)) + 0.5f;
+	displacement.y = sinf((time + 0.33333333f) * 2 * 3.141f) + 0.5f;
+	displacement.z = sinf((time + 0.66666667f) * 2 * 3.141f) + 0.5f;
+	displacement.w = explodeOffset;
+	
+	float corr = 1.f / (displacement.x + displacement.y + displacement.z);
+
+	displacement.x *= corr;
+	displacement.y *= corr;
+	displacement.z *= corr;
+	
+
+	timePtr->displacementFactor = displacement;
 
 	deviceContext->Unmap(timeBuffer, 0);
 	deviceContext->VSSetConstantBuffers(1, 1, &timeBuffer);

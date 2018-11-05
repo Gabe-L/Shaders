@@ -18,15 +18,14 @@ private:
 
 	struct TimeBufferType
 	{
-		float time;
-		XMFLOAT3 padding;
+		XMFLOAT4 displacementFactor;
 	};
 
 public:
 	LightShader(ID3D11Device* device, HWND hwnd);
 	~LightShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture_two, Light* light, float time);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture_two, Light* light, float time, float explodeOffset);
 
 private:
 	void initShader(WCHAR*, WCHAR*);

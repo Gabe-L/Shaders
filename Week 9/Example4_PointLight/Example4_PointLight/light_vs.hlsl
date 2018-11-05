@@ -12,8 +12,7 @@ cbuffer MatrixBuffer : register(b0)
 
 cbuffer TimeBuffer : register(b1)
 {
-    float time;
-    float3 padding;
+    float4 displacementFactor;
 }
 
 struct InputType
@@ -40,24 +39,11 @@ OutputType main(InputType input)
 
     float displacement = 0.0f;
     
-    float timeFactor = sin((time / 3) * (2 * 3.141f)) * 0.5f + 0.75f;
-
-
-    // Broken version
-    displacement += sin(textureColour.r);
-    displacement += sin(textureColour.g);
-    displacement += sin(textureColour.b);
-
-    displacement *= timeFactor;
-
-    // Working meh version
-    //displacement += textureColour.r;
-    //displacement += textureColour.g;
-    //displacement += textureColour.b;
+    displacement = textureColour.r * displacementFactor.r + textureColour.g * displacementFactor.g + textureColour.b * displacementFactor.b;
 
     displacement /= 3;
 
-    input.position.xyz += input.normal * displacement;
+    input.position.xyz += input.normal * displacement * displacementFactor.w;
 
     output.disp.x = displacement;
     output.disp.y = 0.5f;

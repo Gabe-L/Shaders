@@ -13,7 +13,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	// Create Mesh object and shader object
-	mesh = new TessellationMesh(renderer->getDevice(), renderer->getDeviceContext());
+	mesh = new TesselatedQuadMesh(renderer->getDevice(), renderer->getDeviceContext());
 	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	shader = new TessellationShader(renderer->getDevice(), hwnd);
 	
