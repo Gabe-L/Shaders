@@ -5,6 +5,7 @@ struct InputType
 {
     float4 position : SV_POSITION;
     float4 colour : COLOR;
+	float3 normal : NORMAL;
 };
 
 float4 main(InputType input) : SV_TARGET

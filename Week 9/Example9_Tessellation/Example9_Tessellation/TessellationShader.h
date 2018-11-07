@@ -14,7 +14,15 @@ private:
 	struct TessellationBufferType
 	{
 		float tessellationFactor;
-		XMFLOAT3 padding;
+		XMFLOAT3 cameraPosition;
+	};
+
+	struct TimeBufferType
+	{
+		float time;
+		float height;
+		float freq;
+		float speed;
 	};
 
 public:
@@ -22,7 +30,7 @@ public:
 	TessellationShader(ID3D11Device* device, HWND hwnd);
 	~TessellationShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, float tesselationFactor);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, float tesselationFactor, XMFLOAT4 wave_info, XMFLOAT3 cameraPosition);
 
 private:
 	void initShader(WCHAR* vsFilename, WCHAR* psFilename);
@@ -31,5 +39,6 @@ private:
 private:
 	ID3D11Buffer* matrixBuffer;
 	ID3D11SamplerState* sampleState;
+	ID3D11Buffer* timeBuffer;
 	ID3D11Buffer* tessellationBuffer;
 };

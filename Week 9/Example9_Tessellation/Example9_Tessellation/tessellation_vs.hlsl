@@ -13,6 +13,7 @@ struct OutputType
 {
     float3 position : POSITION;
     float4 colour : COLOR;
+	float3 normal : NORMAL;
 };
 
 OutputType main(InputType input)
@@ -24,6 +25,8 @@ OutputType main(InputType input)
     
     // Pass the input color into the hull shader.
     output.colour = float4(1.0, 0.0, 0.0, 1.0);
-    
+
+	output.normal = input.normal;
+
     return output;
 }

@@ -20,6 +20,10 @@ TessellationShader::~TessellationShader()
 		matrixBuffer->Release();
 		matrixBuffer = 0;
 	}
+	if (timeBuffer) {
+		timeBuffer->Release();
+		timeBuffer = 0;
+	}
 	if (tessellationBuffer)
 	{
 		tessellationBuffer->Release();
@@ -43,6 +47,7 @@ TessellationShader::~TessellationShader()
 void TessellationShader::initShader(WCHAR* vsFilename,  WCHAR* psFilename)
 {
 	D3D11_BUFFER_DESC matrixBufferDesc;
+	D3D11_BUFFER_DESC timeBufferDesc;
 	D3D11_BUFFER_DESC tessellationBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 
@@ -60,6 +65,16 @@ void TessellationShader::initShader(WCHAR* vsFilename,  WCHAR* psFilename)
 
 	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
+
+
+	//setup description of time buffer
+	timeBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	timeBufferDesc.ByteWidth = sizeof(TimeBufferType);
+	timeBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	timeBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	timeBufferDesc.MiscFlags = 0;
+	timeBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&timeBufferDesc, NULL, &timeBuffer);
 
 	// Setup description of the tesselation buffer
 	tessellationBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -100,7 +115,7 @@ void TessellationShader::initShader(WCHAR* vsFilename, WCHAR* hsFilename, WCHAR*
 }
 
 
-void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, float tesselationFactor)
+void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, float tesselationFactor, XMFLOAT4 wave_info, XMFLOAT3 cameraPosition)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -120,11 +135,23 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
 
+	//passing in delta time
+	TimeBufferType* timePtr;
+	deviceContext->Map(timeBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	timePtr = (TimeBufferType*)mappedResource.pData;
+	timePtr->time = wave_info.x;
+	timePtr->height = wave_info.y;
+	timePtr->freq = wave_info.z;
+	timePtr->speed = wave_info.w;
+
+	deviceContext->Unmap(timeBuffer, 0);
+	deviceContext->DSSetConstantBuffers(1, 1, &timeBuffer);
+
 	// Lock the constant buffer so it can be written to.
 	result = deviceContext->Map(tessellationBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	TessellationBufferType* tessPtr = (TessellationBufferType*)mappedResource.pData;
 	tessPtr->tessellationFactor = tesselationFactor;
-	tessPtr->padding = XMFLOAT3(0, 0, 0);
+	tessPtr->cameraPosition = cameraPosition;
 
 	deviceContext->Unmap(tessellationBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &tessellationBuffer);

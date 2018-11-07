@@ -27,6 +27,7 @@ private:
 	TessellationShader* shader;
 
 	int tessFactor;
+	XMFLOAT4 wave_info;
 
 };
 

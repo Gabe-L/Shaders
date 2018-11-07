@@ -18,6 +18,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	shader = new TessellationShader(renderer->getDevice(), hwnd);
 	
 	tessFactor = 1;
+	wave_info = XMFLOAT4(0.f, 1.f, 1.f, 1.f);
 }
 
 
@@ -65,10 +66,11 @@ bool App1::render()
 	viewMatrix = camera->getViewMatrix();
 	projectionMatrix = renderer->getProjectionMatrix();
 
+	wave_info.x += timer->getTime();
 
 	// Send geometry data, set shader parameters, render object with shader
 	mesh->sendData(renderer->getDeviceContext());
-	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), tessFactor);
+	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), tessFactor, wave_info, camera->getPosition());
 	shader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	// Render GUI
@@ -90,7 +92,14 @@ void App1::gui()
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
+	
+	ImGui::SliderFloat("Height: ", &wave_info.y, 0.f, 1.f);
+	ImGui::SliderFloat("  Freq: ", &wave_info.z, 0.5f, 10.f);
+	ImGui::SliderFloat(" Speed: ", &wave_info.w, 0.5f, 3.f);
+
 	ImGui::SliderInt("Tessellation Factor: ", &tessFactor, 1, 64);
+
+
 
 	// Render UI
 	ImGui::Render();
