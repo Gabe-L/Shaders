@@ -13,12 +13,22 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	// Create Mesh object and shader object
-	mesh = new TesselatedQuadMesh(renderer->getDevice(), renderer->getDeviceContext());
+	//mesh = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext(), 1);
+	
+	mesh = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext(), 10, 10);
+
 	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	shader = new TessellationShader(renderer->getDevice(), hwnd);
 	
 	tessFactor = 1;
 	wave_info = XMFLOAT4(0.f, 1.f, 1.f, 1.f);
+	lightPos = XMFLOAT3(0, 2, 0);
+
+	testLight = new Light;
+	testLight->setAmbientColour(0.1f, 0.1f, 0.1f, 1.0f);
+	testLight->setDiffuseColour(0.6f, 0.6f, 0.2f, 1.0f);
+	testLight->setPosition(lightPos.x, lightPos.y, lightPos.z);
+
 }
 
 
@@ -70,7 +80,7 @@ bool App1::render()
 
 	// Send geometry data, set shader parameters, render object with shader
 	mesh->sendData(renderer->getDeviceContext());
-	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), tessFactor, wave_info, camera->getPosition());
+	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), tessFactor, wave_info, camera->getPosition(), testLight);
 	shader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	// Render GUI
@@ -99,7 +109,11 @@ void App1::gui()
 
 	ImGui::SliderInt("Tessellation Factor: ", &tessFactor, 1, 64);
 
+	ImGui::SliderFloat("Light Pos X: ", &lightPos.x, -5.0f, 5.0f);
+	ImGui::SliderFloat("Light Pos Y: ", &lightPos.y, -5.0f, 5.0f);
+	ImGui::SliderFloat("Light Pos Z: ", &lightPos.z, -5.0f, 5.0f);
 
+	testLight->setPosition(lightPos.x, lightPos.y, lightPos.z);
 
 	// Render UI
 	ImGui::Render();

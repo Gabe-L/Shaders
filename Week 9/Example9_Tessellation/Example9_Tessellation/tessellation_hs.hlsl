@@ -44,14 +44,14 @@ ConstantOutputType PatchConstantFunction(InputPatch<InputType, 4> inputPatch, ui
     distance = sqrt(distance);
 
     // Set the tessellation factors for the three edges of the triangle.
-	output.edges[0] = tessFactor / distance;
-	output.edges[1] = tessFactor / distance;
-    output.edges[2] = tessFactor / distance;
-    output.edges[3] = tessFactor / distance;
+	output.edges[0] = tessFactor;// / distance;
+	output.edges[1] = tessFactor;// / distance;
+    output.edges[2] = tessFactor;// / distance;
+    output.edges[3] = tessFactor;// / distance;
 
     // Set the tessellation factor for tessallating inside the triangle.
-    output.inside[0] = tessFactor / distance;
-    output.inside[1] = tessFactor / distance;
+    output.inside[0] = tessFactor;// / distance;
+    output.inside[1] = tessFactor;// / distance;
 
     return output;
 }

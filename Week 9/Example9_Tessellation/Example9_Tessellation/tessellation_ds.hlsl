@@ -36,6 +36,7 @@ struct OutputType
     //float4 colour : COLOR;
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
+    float3 worldPosition : TEXCOORD1;
 };
 
 [domain("quad")]
@@ -65,10 +66,9 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	//offset position based on sine wave
     vertexPosition.y = height * (sin((vertexPosition.x * freq) + (time * speed)));
 
-
 	//modify normals
-    vertexNormal.x = 1 - cos(vertexPosition.x + time);
-    vertexNormal.y = abs(cos(vertexPosition.x + time));
+    vertexNormal.x = 1 - (height * cos((vertexPosition.x * freq) + (time * speed)));
+    vertexNormal.y = abs(height * cos((vertexPosition.x * freq) + (time * speed)));
 
     // Calculate the position of the new vertex against the world, view, and projection matrices.
     output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
@@ -89,6 +89,8 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
     float2 texCoord = lerp(t1, t2, uvwCoord.x);
 
     output.tex = texCoord;
+
+    output.worldPosition = mul(float4(vertexPosition, 1.0f), worldMatrix).xyz;
 
     return output;
 }

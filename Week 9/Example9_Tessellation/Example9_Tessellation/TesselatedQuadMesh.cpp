@@ -21,21 +21,21 @@ void TesselatedQuadMesh::initBuffers(ID3D11Device * device)
 	vertexCount = 4;
 	indexCount = 4;
 
-	VertexType_Colour* vertices = new VertexType_Colour[vertexCount];
+	VertexType_Texture* vertices = new VertexType_Texture[vertexCount];
 	unsigned long* indices = new unsigned long[indexCount];
 
 	// Load the vertex array with data.
-	vertices[0].position = XMFLOAT3(-1.0f, 0.0f, 1.0f);  // Top left.
-	vertices[0].colour = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	vertices[0].position = XMFLOAT3(0.0f, 0.0f, 10.0f);  // Top left.
+	vertices[0].texture = XMFLOAT2(0.0f, 0.0f);
 
-	vertices[1].position = XMFLOAT3(-1.0f, 0.0f, -1.0f);  // bottom left.
-	vertices[1].colour = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vertices[1].position = XMFLOAT3(0.0f, 0.0f, -10.0f);  // bottom left.
+	vertices[1].texture = XMFLOAT2(0.0f, 1.0f);
 
-	vertices[2].position = XMFLOAT3(1.0f, 0.0f, -1.0f);  // bottom right.
-	vertices[2].colour = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+	vertices[2].position = XMFLOAT3(10.0f, 0.0f, -10.0f);  // bottom right.
+	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
 
-	vertices[3].position = XMFLOAT3(1.0f, 0.0f, 1.0f);  // top right.
-	vertices[3].colour = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	vertices[3].position = XMFLOAT3(10.0f, 0.0f, 10.0f);  // top right.
+	vertices[3].texture = XMFLOAT2(1.0f, 0.0f);
 
 	// Load the index array with data.
 
@@ -44,7 +44,7 @@ void TesselatedQuadMesh::initBuffers(ID3D11Device * device)
 	indices[2] = 2;  // Bottom right.
 	indices[3] = 3;  // Top right
 
-	D3D11_BUFFER_DESC vertexBufferDesc = { sizeof(VertexType_Colour) * vertexCount, D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER, 0, 0, 0 };
+	D3D11_BUFFER_DESC vertexBufferDesc = { sizeof(VertexType_Texture) * vertexCount, D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER, 0, 0, 0 };
 	vertexData = { vertices, 0 , 0 };
 	device->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
 
@@ -65,7 +65,7 @@ void TesselatedQuadMesh::sendData(ID3D11DeviceContext* deviceContext, D3D_PRIMIT
 	unsigned int offset;
 
 	// Set vertex buffer stride and offset.
-	stride = sizeof(VertexType_Colour);
+	stride = sizeof(VertexType_Texture);
 	offset = 0;
 
 	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);

@@ -129,11 +129,13 @@
     <ClCompile Include="App1.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="TesselatedQuadMesh.cpp" />
+    <ClCompile Include="TessellatedPlane.cpp" />
     <ClCompile Include="TessellationShader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h" />
     <ClInclude Include="TesselatedQuadMesh.h" />
+    <ClInclude Include="TessellatedPlane.h" />
     <ClInclude Include="TessellationShader.h" />
   </ItemGroup>
   <ItemGroup>

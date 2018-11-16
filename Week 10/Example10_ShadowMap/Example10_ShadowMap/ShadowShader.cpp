@@ -106,10 +106,38 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	XMMATRIX tproj = XMMatrixTranspose(projectionMatrix);
 
 	XMMATRIX tLightViewMatrix = XMMatrixTranspose(light->getViewMatrix());
-	XMMATRIX tLightProjectionMatrix = XMMatrixTranspose(light->getOrthoMatrix());
+	XMMATRIX tLightProjectionMatrix = XMMatrixTranspose(light->getProjectionMatrix());
 
-	XMMATRIX tLightViewMatrix2 = XMMatrixTranspose(light2->getViewMatrix());
-	XMMATRIX tLightProjectionMatrix2 = XMMatrixTranspose(light2->getOrthoMatrix());
+	//XMMATRIX tLightViewMatrix2 = XMMatrixTranspose(light2->getViewMatrix());
+	XMVECTOR lgtPos = XMLoadFloat3(&light2->getPosition());
+	XMVECTOR lgtDir = XMLoadFloat3(&light2->getDirection());
+	
+
+	XMFLOAT3 lightRight;
+	XMVECTOR lgtRight;
+	XMFLOAT3 globalUp;
+	XMVECTOR glblUp;
+
+	globalUp.x = 0; globalUp.y = 1; globalUp.z = 0;
+	// Set right vector to forward
+	lightRight = light2->getDirection();
+
+	lgtRight = XMLoadFloat3(&lightRight);
+	glblUp = XMLoadFloat3(&globalUp);
+
+	// Calculate right (cross between forward and global up)
+	lgtRight = XMVector3Cross(lgtRight, glblUp);
+
+	// Calculate up (cross between right & forward)
+	XMVECTOR lgtUp = XMVector3Cross(lgtRight, lgtDir);
+
+	//lgtDir = XMVector3Normalize(lgtDir);
+	//lgtUp = XMVector3Normalize(lgtUp);
+
+	XMMATRIX testMatrix = XMMatrixLookToLH(lgtPos, lgtDir, lgtUp);
+
+	XMMATRIX tLightViewMatrix2 = XMMatrixTranspose(testMatrix);
+	XMMATRIX tLightProjectionMatrix2 = XMMatrixTranspose(light2->getProjectionMatrix());
 	
 	// Lock the constant buffer so it can be written to.
 	deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);

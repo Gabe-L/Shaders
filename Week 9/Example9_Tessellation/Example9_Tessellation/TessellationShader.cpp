@@ -40,6 +40,13 @@ TessellationShader::~TessellationShader()
 		tessellationBuffer = 0;
 	}
 
+	// Release the light constant buffer.
+	if (lightBuffer)
+	{
+		lightBuffer->Release();
+		lightBuffer = 0;
+	}
+
 	//Release base shader components
 	BaseShader::~BaseShader();
 }
@@ -49,6 +56,7 @@ void TessellationShader::initShader(WCHAR* vsFilename,  WCHAR* psFilename)
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_BUFFER_DESC timeBufferDesc;
 	D3D11_BUFFER_DESC tessellationBufferDesc;
+	D3D11_BUFFER_DESC lightBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 
 	// Load (+ compile) shader files
@@ -87,6 +95,16 @@ void TessellationShader::initShader(WCHAR* vsFilename,  WCHAR* psFilename)
 	// Create buffer pointer
 	renderer->CreateBuffer(&tessellationBufferDesc, NULL, &tessellationBuffer);
 	
+	// Creating light buffer
+	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
+	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightBufferDesc.MiscFlags = 0;
+	lightBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
+
+
 	// Create a texture sampler state description.
 	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -114,8 +132,12 @@ void TessellationShader::initShader(WCHAR* vsFilename, WCHAR* hsFilename, WCHAR*
 	loadDomainShader(dsFilename);
 }
 
+XMFLOAT4 float3_to_float4(XMFLOAT3 input, float w_val = 0.f) //converts a float3 to a float4 for padding
+{
+	return XMFLOAT4(input.x, input.y, input.z, w_val);
+}
 
-void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, float tesselationFactor, XMFLOAT4 wave_info, XMFLOAT3 cameraPosition)
+void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, float tesselationFactor, XMFLOAT4 wave_info, XMFLOAT3 cameraPosition, Light* light)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -134,6 +156,19 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
+
+	// Passing in light info
+
+	LightBufferType* lightPtr;
+	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	lightPtr = (LightBufferType*)mappedResource.pData;
+
+	lightPtr->ambient = light->getAmbientColour();
+	lightPtr->diffuse = light->getDiffuseColour();
+	lightPtr->position = float3_to_float4(light->getPosition());
+
+	deviceContext->Unmap(lightBuffer, 0);
+	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
 	//passing in delta time
 	TimeBufferType* timePtr;

@@ -5,7 +5,8 @@
 // Includes
 #include "DXF.h"	// include dxframework
 #include "TessellationShader.h"
-#include "TesselatedQuadMesh.h"
+//#include "TesselatedQuadMesh.h"
+#include "TessellatedPlane.h"
 
 class App1 : public BaseApplication
 {
@@ -23,8 +24,13 @@ protected:
 
 private:
 	//TessellationMesh* mesh;
-	TesselatedQuadMesh* mesh;
+	//TesselatedQuadMesh* mesh;
+	TessellatedPlane* mesh;
+	
 	TessellationShader* shader;
+	Light* testLight;
+
+	XMFLOAT3 lightPos;
 
 	int tessFactor;
 	XMFLOAT4 wave_info;

@@ -23,7 +23,7 @@ public:
 
 protected:
 	bool render();
-	void depthPass(Light* light_used, RenderTexture* texture_target);
+	void depthPass(Light* light_used, RenderTexture* texture_target, int matrix_type);
 	void finalPass();
 	void gui();
 
@@ -32,6 +32,7 @@ private:
 	PlaneMesh* mesh;
 	CubeMesh* cube;
 	SphereMesh* sphere;
+	SphereMesh* lightSphere;
 
 	OrthoMesh* orthoMesh;
 	OrthoMesh* orthoMesh2;
@@ -47,6 +48,8 @@ private:
 	RenderTexture* shadowMap2;
 
 	float rotationTrack;
+	XMFLOAT3 lightPos;
+	XMFLOAT3 lightDir;
 
 };
 
