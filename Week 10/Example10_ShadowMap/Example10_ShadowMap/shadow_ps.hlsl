@@ -91,7 +91,7 @@ float4 main(InputType input) : SV_TARGET
     }
     else
     {
-        colour = saturate(colour + ambient[0]);
-        return saturate(colour) * textureColour;
+		colour = saturate(colour +ambient[0]);
+        return colour * textureColour;
     }
 }

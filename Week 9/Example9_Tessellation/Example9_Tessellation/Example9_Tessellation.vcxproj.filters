@@ -30,6 +30,9 @@
     <ClCompile Include="TessellatedPlane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GrassShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -44,6 +47,9 @@
     <ClInclude Include="TessellatedPlane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GrassShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="tessellation_ds.hlsl">
@@ -56,6 +62,12 @@
       <Filter>Resource Files</Filter>
     </FxCompile>
     <FxCompile Include="tessellation_vs.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="grass_gs.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="grass_ps.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>

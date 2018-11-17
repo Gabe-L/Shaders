@@ -7,6 +7,7 @@
 #include "TessellationShader.h"
 //#include "TesselatedQuadMesh.h"
 #include "TessellatedPlane.h"
+#include "GrassShader.h"
 
 class App1 : public BaseApplication
 {
@@ -28,7 +29,9 @@ private:
 	TessellatedPlane* mesh;
 	
 	TessellationShader* shader;
+	
 	Light* testLight;
+	GrassShader* grassShader;
 
 	XMFLOAT3 lightPos;
 
