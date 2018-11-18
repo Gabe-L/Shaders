@@ -19,7 +19,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	cubeMesh = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);	// Full screen size
 	smallOrthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), downSampleX, downSampleY);	// Small screen size
-
+	
+	depthShader = new DepthShader(renderer->getDevice(), hwnd);
 	lightShader = new LightShader(renderer->getDevice(), hwnd);
 	textureShader = new TextureShader(renderer->getDevice(), hwnd);
 	horizontalBlurShader = new HorizontalBlurShader(renderer->getDevice(), hwnd);
@@ -36,6 +37,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	upSampleTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
 	mouseTexture = new RenderTexture(renderer->getDevice(), downSampleX, downSampleY, SCREEN_NEAR, SCREEN_DEPTH);
+	camDepth = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
 	blurDirection = 0.f;
 
@@ -78,6 +80,7 @@ bool App1::frame()
 
 bool App1::render()
 {
+	depthPass(camera, camDepth);
 	// Render scene
 	firstPass();
 	downSample();
@@ -241,7 +244,7 @@ void App1::finalPass()
 	XMMATRIX orthoViewMatrix = camera->getOrthoViewMatrix();	// Default camera position for orthographic rendering
 
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, upSampleTexture->getShaderResourceView());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, camDepth->getShaderResourceView());
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -274,5 +277,64 @@ void App1::gui()
 	// Render UI
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}
+
+void App1::depthPass(Camera * cam, RenderTexture * texture_target)
+{
+	// Set the render target to be the render to texture.
+	texture_target->setRenderTarget(renderer->getDeviceContext());
+	texture_target->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 1.0f, 1.0f, 1.0f);
+
+	// get the world, view, and projection matrices from the camera and d3d objects.
+	//light_used->generateViewMatrix();
+	//XMMATRIX lightViewMatrix = light_used->getViewMatrix();
+
+	//XMVECTOR camPos = XMLoadFloat3(&cam->getPosition());
+	//XMVECTOR camDir = XMLoadFloat3(&cam->getDirection());
+
+
+	//XMFLOAT3 lightRight;
+	//XMVECTOR lgtRight;
+	//
+	//XMFLOAT3 globalUp;
+	//XMVECTOR glblUp;
+	//
+	//globalUp.x = 0; globalUp.y = 1; globalUp.z = 0;
+	//// Set right vector to forward
+	//Right = light_used->getDirection();
+	//
+	//lgtRight = XMLoadFloat3(&lightRight);
+	//glblUp = XMLoadFloat3(&globalUp);
+	//
+	//// Calculate right (cross between forward and global up)
+	//lgtRight = XMVector3Cross(lgtRight, glblUp);
+	//
+	//// Calculate up (cross between right & forward)
+	//XMVECTOR lgtUp = XMVector3Cross(lgtRight, lgtDir);
+	//
+	////lgtDir = XMVector3Normalize(lgtDir);
+	////lgtUp = XMVector3Normalize(lgtUp);
+	//
+	//XMMATRIX testMatrix = XMMatrixLookToLH(lgtPos, lgtDir, lgtUp);
+
+	XMMATRIX lightViewMatrix = cam->getViewMatrix();
+
+	XMMATRIX lightProjectionMatrix = renderer->getProjectionMatrix();
+	XMMATRIX worldMatrix = renderer->getWorldMatrix();
+
+	//worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
+	// Render floor
+	cubeMesh->sendData(renderer->getDeviceContext());
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthShader->render(renderer->getDeviceContext(), cubeMesh->getIndexCount());
+
+	worldMatrix = renderer->getWorldMatrix();
+	worldMatrix = XMMatrixTranslation(0.f, 7.f, 5.f);
+	XMMATRIX scaleMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
+	worldMatrix = XMMatrixMultiply(worldMatrix, scaleMatrix);
+
+	// Set back buffer as render target and reset view port.
+	renderer->setBackBufferRenderTarget();
+	renderer->resetViewport();
 }
 

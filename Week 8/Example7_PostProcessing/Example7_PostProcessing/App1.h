@@ -9,6 +9,7 @@
 #include "VerticalBlurShader.h"
 #include "HorizontalBlurShader.h"
 #include "MouseShader.h"
+#include "DepthShader.h"
 
 class App1 : public BaseApplication
 {
@@ -31,6 +32,8 @@ protected:
 	void finalPass();
 	void gui();
 
+	void depthPass(Camera* cam, RenderTexture* texture_target);
+
 private:
 
 	float downSampleX, downSampleY;
@@ -48,6 +51,7 @@ private:
 	VerticalBlurShader* verticalBlurShader;
 	HorizontalBlurShader* horizontalBlurShader;
 	MouseShader* mouseShader;
+	DepthShader* depthShader;
 
 	RenderTexture* downSampleTexture;
 	RenderTexture* upSampleTexture;
@@ -55,6 +59,7 @@ private:
 	RenderTexture* renderTexture;
 	RenderTexture* horizontalBlurTexture;
 	RenderTexture* verticalBlurTexture;
+	RenderTexture* camDepth;
 
 	Light* light;
 };
