@@ -18,7 +18,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture("brick", L"res/wood.png");
 	cubeMesh = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);	// Full screen size
-	smallOrthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), downSampleX, downSampleY);	// Small screen size
+	smallOrthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);	// Small screen size
 	
 	depthShader = new DepthShader(renderer->getDevice(), hwnd);
 	lightShader = new LightShader(renderer->getDevice(), hwnd);
@@ -26,17 +26,18 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	horizontalBlurShader = new HorizontalBlurShader(renderer->getDevice(), hwnd);
 	verticalBlurShader = new VerticalBlurShader(renderer->getDevice(), hwnd);
 	mouseShader = new MouseShader(renderer->getDevice(), hwnd);
+	dofShader = new DoFShader(renderer->getDevice(), hwnd);
 
-
-	downSampleTexture = new RenderTexture(renderer->getDevice(), downSampleX, downSampleY, SCREEN_NEAR, SCREEN_DEPTH);
+	downSampleTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 	renderTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+	dofTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
-	horizontalBlurTexture = new RenderTexture(renderer->getDevice(), downSampleX, downSampleY, SCREEN_NEAR, SCREEN_DEPTH);
-	verticalBlurTexture = new RenderTexture(renderer->getDevice(), downSampleX, downSampleY, SCREEN_NEAR, SCREEN_DEPTH);
+	horizontalBlurTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+	verticalBlurTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
 	upSampleTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
-	mouseTexture = new RenderTexture(renderer->getDevice(), downSampleX, downSampleY, SCREEN_NEAR, SCREEN_DEPTH);
+	mouseTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 	camDepth = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
 	blurDirection = 0.f;
@@ -80,17 +81,21 @@ bool App1::frame()
 
 bool App1::render()
 {
+
 	depthPass(camera, camDepth);
 	// Render scene
 	firstPass();
-	downSample();
+	//downSample();
 	// Apply horizontal blur stage
 	horizontalBlur();
 	// Apply vertical blur to the horizontal blur stage
 	verticalBlur();
 	//mouseHighlight();
-	upSample();
+	//upSample();
 	// Render final pass to frame buffer
+
+	dofPass();
+
 	finalPass();
 
 	return true;
@@ -154,7 +159,7 @@ void App1::horizontalBlur()
 	// Render for Horizontal Blur
 	renderer->setZBuffer(false);
 	smallOrthoMesh->sendData(renderer->getDeviceContext());
-	horizontalBlurShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, downSampleTexture->getShaderResourceView(), screenSizeX, horScale);
+	horizontalBlurShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, renderTexture->getShaderResourceView(), screenSizeX, horScale);
 	horizontalBlurShader->render(renderer->getDeviceContext(), smallOrthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -231,6 +236,28 @@ void App1::upSample()
 	renderer->setBackBufferRenderTarget();
 }
 
+void App1::dofPass()
+{
+	XMMATRIX worldMatrix, baseViewMatrix, orthoMatrix;
+
+	dofTexture->setRenderTarget(renderer->getDeviceContext());
+	dofTexture->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 1.0f, 0.0f, 1.0f);
+
+	worldMatrix = renderer->getWorldMatrix();
+	baseViewMatrix = camera->getOrthoViewMatrix();
+	orthoMatrix = upSampleTexture->getOrthoMatrix();
+
+	// Render for up sample
+	renderer->setZBuffer(false);
+	orthoMesh->sendData(renderer->getDeviceContext());
+	dofShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, renderTexture->getShaderResourceView(), verticalBlurTexture->getShaderResourceView(), camDepth->getShaderResourceView());
+	dofShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
+	renderer->setZBuffer(true);
+
+	// Reset the render target back to the original back buffer and not the render to texture anymore.
+	renderer->setBackBufferRenderTarget();
+}
+
 void App1::finalPass()
 {
 	// Clear the scene. (default blue colour)
@@ -244,7 +271,7 @@ void App1::finalPass()
 	XMMATRIX orthoViewMatrix = camera->getOrthoViewMatrix();	// Default camera position for orthographic rendering
 
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, camDepth->getShaderResourceView());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, dofTexture->getShaderResourceView());
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 

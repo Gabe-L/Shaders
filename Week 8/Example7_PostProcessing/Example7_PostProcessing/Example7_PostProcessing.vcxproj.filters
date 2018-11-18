@@ -39,6 +39,9 @@
     <ClCompile Include="DepthShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DoFShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -60,6 +63,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DepthShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DoFShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -95,6 +101,9 @@
       <Filter>Resource Files</Filter>
     </FxCompile>
     <FxCompile Include="depth_ps.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="DoF_ps.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>
