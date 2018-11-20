@@ -94,7 +94,7 @@ void ShadowShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 }
 
 
-void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView*depthMap, ID3D11ShaderResourceView*depthMap2, Light* light, Light* light2)
+void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView*depthMap, ID3D11ShaderResourceView*depthMap2, ID3D11ShaderResourceView*depthArray[6], Light* light, Light* light2, Light* pointLight)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
@@ -108,37 +108,6 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	XMMATRIX tLightViewMatrix = XMMatrixTranspose(light->getViewMatrix());
 	XMMATRIX tLightProjectionMatrix = XMMatrixTranspose(light->getProjectionMatrix());
 
-	//XMMATRIX tLightViewMatrix2 = XMMatrixTranspose(light2->getViewMatrix());
-	XMVECTOR lgtPos = XMLoadFloat3(&light2->getPosition());
-	XMVECTOR lgtDir = XMLoadFloat3(&light2->getDirection());
-	
-
-	XMFLOAT3 lightRight;
-	XMVECTOR lgtRight;
-	XMFLOAT3 globalUp;
-	XMVECTOR glblUp;
-
-	globalUp.x = 0; globalUp.y = 1; globalUp.z = 0;
-	// Set right vector to forward
-	lightRight = light2->getDirection();
-
-	lgtRight = XMLoadFloat3(&lightRight);
-	glblUp = XMLoadFloat3(&globalUp);
-
-	// Calculate right (cross between forward and global up)
-	lgtRight = XMVector3Cross(lgtRight, glblUp);
-
-	// Calculate up (cross between right & forward)
-	XMVECTOR lgtUp = XMVector3Cross(lgtRight, lgtDir);
-
-	//lgtDir = XMVector3Normalize(lgtDir);
-	//lgtUp = XMVector3Normalize(lgtUp);
-
-	XMMATRIX testMatrix = XMMatrixLookToLH(lgtPos, lgtDir, lgtUp);
-
-	XMMATRIX tLightViewMatrix2 = XMMatrixTranspose(testMatrix);
-	XMMATRIX tLightProjectionMatrix2 = XMMatrixTranspose(light2->getProjectionMatrix());
-	
 	// Lock the constant buffer so it can be written to.
 	deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
@@ -150,10 +119,35 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	dataPtr->lightView = tLightViewMatrix;
 	dataPtr->lightProjection = tLightProjectionMatrix;
 
+	XMMATRIX tLightViewMatrix2 = XMMatrixTranspose(light2->getViewMatrix());
+	XMMATRIX tLightProjectionMatrix2 = XMMatrixTranspose(light2->getProjectionMatrix());
+
+
 	// Light view two
 	dataPtr->lightView2 = tLightViewMatrix2;
 	dataPtr->lightProjection2 = tLightProjectionMatrix2;
 
+	XMFLOAT3 directions[6] = {
+		XMFLOAT3(0.001f,1,0),	// Up
+		XMFLOAT3(-0.0001f,-1,0),	// Down
+		XMFLOAT3(1,0,0),	// Right
+		XMFLOAT3(-1,0,0),	// Left
+		XMFLOAT3(0,0,1),	// Fowards
+		XMFLOAT3(0,0,-1)	// Backwards
+	};
+
+	for (int i = 0; i < 6; i++) {
+
+		pointLight->setDirection(directions[i].x, directions[i].y, directions[i].z);
+		pointLight->generateViewMatrix();
+		XMMATRIX tLightViewMatrixPoint = XMMatrixTranspose(pointLight->getViewMatrix());
+		XMMATRIX tLightProjectionMatrixPoint = XMMatrixTranspose(pointLight->getProjectionMatrix());
+
+
+		// Light view two
+		dataPtr->lightViews[i] = tLightViewMatrixPoint;
+		dataPtr->lightProjections[i] = tLightProjectionMatrixPoint;
+	}
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
@@ -185,6 +179,17 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 
 	lightPtr->direction[1] = lightDir;
 
+	// Point light
+	lightPtr->ambient[2] = pointLight->getAmbientColour();
+	lightPtr->diffuse[2] = pointLight->getDiffuseColour();
+
+	lightDir.x = pointLight->getDirection().x;
+	lightDir.y = pointLight->getDirection().y;
+	lightDir.z = pointLight->getDirection().z;
+	lightDir.w = 1.0f;
+
+	lightPtr->direction[2] = lightDir;
+
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
@@ -192,7 +197,7 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	deviceContext->PSSetShaderResources(0, 1, &texture);
 	deviceContext->PSSetShaderResources(1, 1, &depthMap);
 	deviceContext->PSSetShaderResources(2, 1, &depthMap2);
+	deviceContext->PSSetShaderResources(3, 6, depthArray);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
 }
-

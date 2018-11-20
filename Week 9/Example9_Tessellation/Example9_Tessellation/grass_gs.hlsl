@@ -52,7 +52,7 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
 	up = cross(right, forward);
 
 	right *= 0.1f;
-	up *= 2.0f;
+	up *= 0.5f;
 
 	float3 vertPos[3];
 	vertPos[0] = input[0].position.xyz - (right / 2);

@@ -8,6 +8,8 @@ cbuffer MatrixBuffer : register(b0)
 	matrix lightProjectionMatrix;
     matrix lightViewMatrixTwo;
     matrix lightProjectionMatrixTwo;
+	matrix lightViews[6];
+	matrix lightProjections[6];
 };
 
 struct InputType
@@ -24,6 +26,7 @@ struct OutputType
 	float3 normal : NORMAL;
     float4 lightViewPos : TEXCOORD1;
     float4 lightViewPos2 : TEXCOORD2;
+	float4 lightViewsPos[6] : TEXCOORD3;
 };
 
 
@@ -45,6 +48,12 @@ OutputType main(InputType input)
     output.lightViewPos2 = mul(input.position, worldMatrix);
     output.lightViewPos2 = mul(output.lightViewPos2, lightViewMatrixTwo);
     output.lightViewPos2 = mul(output.lightViewPos2, lightProjectionMatrixTwo);
+
+	for (int i = 0; i < 6; i++) {
+		output.lightViewsPos[i] = mul(input.position, worldMatrix);
+		output.lightViewsPos[i] = mul(output.lightViewsPos[i], lightViews[i]);
+		output.lightViewsPos[i] = mul(output.lightViewsPos[i], lightProjections[i]);
+	}
 
     output.tex = input.tex;
     output.normal = mul(input.normal, (float3x3)worldMatrix);

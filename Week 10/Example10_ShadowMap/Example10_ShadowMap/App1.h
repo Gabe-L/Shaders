@@ -23,7 +23,7 @@ public:
 
 protected:
 	bool render();
-	void depthPass(Light* light_used, RenderTexture* texture_target, int matrix_type);
+	void depthPass(Light* light_used, RenderTexture* texture_target);
 	void finalPass();
 	void gui();
 
@@ -39,6 +39,7 @@ private:
 
 	Light* light;
 	Light* light2;
+	Light* pointLight;
 
 	Model* model;
 	ShadowShader* shadowShader;
@@ -46,6 +47,7 @@ private:
 
 	RenderTexture* shadowMap;
 	RenderTexture* shadowMap2;
+	RenderTexture* shadowMaps[6];
 
 	float rotationTrack;
 	XMFLOAT3 lightPos;

@@ -38,16 +38,21 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	shadowMap = new RenderTexture(renderer->getDevice(), shadowmapWidth, shadowmapHeight, 0.1f, 100.f);
 	shadowMap2 = new RenderTexture(renderer->getDevice(), shadowmapWidth, shadowmapHeight, 0.1f, 100.f);
 
+	for (int i = 0; i < 6; i++) {
+		shadowMaps[i] = new RenderTexture(renderer->getDevice(), shadowmapWidth, shadowmapHeight, 0.1f, 100.f);
+	}
+
 	light = new Light;
 	light->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
 	light->setDiffuseColour(1.0f, 0.0f, 0.0f, 1.0f);
 	light->setDirection(1.0f, -1.0f, 0.0f);
 	light->setPosition(-10.f, 10.f, 0.f);
 	light->generateProjectionMatrix(0.1f, 100.f);
+	light->generateViewMatrix();
 	//light->generateOrthoMatrix(sceneWidth, sceneHeight, 0.1f, 100.f);
 	
 	lightPos = XMFLOAT3(0, 10, -15);
-	lightDir = XMFLOAT3(0.0f, -1.0f, 1.0f);
+	lightDir = XMFLOAT3(0.0f, 0.0f, 1.0f);
 
 	light2 = new Light;
 	light2->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
@@ -55,7 +60,14 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	light2->setDirection(lightDir.x, lightDir.y, lightDir.z);
 	light2->setPosition(lightPos.x, lightPos.y, lightPos.z);
 	light2->generateProjectionMatrix(0.5f, 100.f);
+	light2->generateViewMatrix();
 	//light2->generateOrthoMatrix(sceneWidth, sceneHeight, 0.1f, 100.f);
+
+	pointLight = new Light;
+	pointLight->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
+	pointLight->setDiffuseColour(1.0f, 0.0f, 0.0f, 1.0f);
+	pointLight->setPosition(lightPos.x, lightPos.y, lightPos.z);
+	pointLight->generateProjectionMatrix(0.5f, 100.f);
 
 	rotationTrack = 0.0f;
 
@@ -97,8 +109,24 @@ bool App1::render()
 	rotationTrack += timer->getTime();
 	// Perform depth pass for light one and light2
 	//depthPass(light, shadowMap, 0);
-	depthPass(light2, shadowMap2, 1);
+	depthPass(light2, shadowMap2);
 	
+	float low = 0.01f;
+
+	XMFLOAT3 directions[6] = {
+		XMFLOAT3(0.0f ,1, low),	// Up
+		XMFLOAT3(0.0f ,-1, low),	// Down
+		XMFLOAT3(1,0,0),	// Right
+		XMFLOAT3(-1,0,0),	// Left
+		XMFLOAT3(0,0,1),	// Fowards
+		XMFLOAT3(0,0,-1)	// Backwards
+	};
+
+
+	for (int i = 0; i < 6; i++) {
+		pointLight->setDirection(directions[i].x, directions[i].y, directions[i].z);
+		depthPass(pointLight, shadowMaps[i]);
+	}
 
 	// Render scene
 	finalPass();
@@ -106,49 +134,15 @@ bool App1::render()
 	return true;
 }
 
-void App1::depthPass(Light* light_used, RenderTexture* texture_target, int matrix_type)
+void App1::depthPass(Light* light_used, RenderTexture* texture_target)
 {
 	// Set the render target to be the render to texture.
 	texture_target->setRenderTarget(renderer->getDeviceContext());
 	texture_target->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 1.0f, 1.0f, 1.0f);
 
 	// get the world, view, and projection matrices from the camera and d3d objects.
-	//light_used->generateViewMatrix();
-	//XMMATRIX lightViewMatrix = light_used->getViewMatrix();
-
-	XMVECTOR lgtPos = XMLoadFloat3(&light_used->getPosition());
-	XMVECTOR lgtDir = XMLoadFloat3(&light_used->getDirection());
-
-
-	XMFLOAT3 lightRight;
-	XMVECTOR lgtRight;
-
-	XMFLOAT3 globalUp;
-	XMVECTOR glblUp;
-
-	globalUp.x = 0; globalUp.y = 1; globalUp.z = 0;
-	// Set right vector to forward
-	lightRight = light_used->getDirection();
-
-	lgtRight = XMLoadFloat3(&lightRight);
-	glblUp = XMLoadFloat3(&globalUp);
-
-	// Calculate right (cross between forward and global up)
-	lgtRight = XMVector3Cross(lgtRight, glblUp);
-
-	// Calculate up (cross between right & forward)
-	XMVECTOR lgtUp = XMVector3Cross(lgtRight, lgtDir);
-
-	//lgtDir = XMVector3Normalize(lgtDir);
-	//lgtUp = XMVector3Normalize(lgtUp);
-
-	XMMATRIX testMatrix = XMMatrixLookToLH(lgtPos, lgtDir, lgtUp);
-	
-	XMFLOAT3 yAx = XMFLOAT3(0, 1, 0);
-
-	XMVECTOR yAxis = XMLoadFloat3(&yAx);
-
-	XMMATRIX lightViewMatrix = testMatrix;
+	light_used->generateViewMatrix();
+	XMMATRIX lightViewMatrix = light_used->getViewMatrix();
 
 	XMMATRIX lightProjectionMatrix = light_used->getProjectionMatrix();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
@@ -198,10 +192,18 @@ void App1::depthPass(Light* light_used, RenderTexture* texture_target, int matri
 
 void App1::finalPass()
 {
+
+	ID3D11ShaderResourceView* depthResources[6];
+
+	for (int i = 0; i < 6; i++) {
+		depthResources[i] = shadowMaps[i]->getShaderResourceView();
+	}
+
 	// Clear the scene. (default blue colour)
 	renderer->beginScene(0.39f, 0.58f, 0.92f, 1.0f);
 	camera->update();
 	light2->setPosition(lightPos.x, lightPos.y, lightPos.z);
+	pointLight->setPosition(lightPos.x, lightPos.y, lightPos.z);
 	light2->setDirection(lightDir.x, lightDir.y, lightDir.z);
 
 	// get the world, view, projection, and ortho matrices from the camera and Direct3D objects.
@@ -213,7 +215,7 @@ void App1::finalPass()
 	// Render floor
 	mesh->sendData(renderer->getDeviceContext());
 	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, 
-		textureMgr->getTexture("brick"), shadowMap->getShaderResourceView(),shadowMap2->getShaderResourceView(), light, light2);
+		textureMgr->getTexture("brick"), shadowMap->getShaderResourceView(),shadowMap2->getShaderResourceView(), depthResources, light, light2, pointLight);
 	shadowShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	// Render model
@@ -222,7 +224,7 @@ void App1::finalPass()
 	XMMATRIX scaleMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
 	worldMatrix = XMMatrixMultiply(worldMatrix, scaleMatrix);
 	model->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), shadowMap->getShaderResourceView(), shadowMap2->getShaderResourceView(), light, light2);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), shadowMap->getShaderResourceView(), shadowMap2->getShaderResourceView(), depthResources, light, light2, pointLight);
 	shadowShader->render(renderer->getDeviceContext(), model->getIndexCount());
 
 
@@ -232,7 +234,7 @@ void App1::finalPass()
 	scaleMatrix = XMMatrixScaling(2.0f, 2.0f, 2.0f);
 	worldMatrix = XMMatrixMultiply(worldMatrix, scaleMatrix);
 	sphere->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), shadowMap->getShaderResourceView(), shadowMap2->getShaderResourceView(), light, light2);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), shadowMap->getShaderResourceView(), shadowMap2->getShaderResourceView(), depthResources, light, light2, pointLight);
 	shadowShader->render(renderer->getDeviceContext(), sphere->getIndexCount());
 
 	// Render sphere
@@ -253,7 +255,7 @@ void App1::finalPass()
 	worldMatrix = XMMatrixMultiply(worldMatrix, scaleMatrix);
 
 	cube->sendData(renderer->getDeviceContext());
-	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), shadowMap->getShaderResourceView(), shadowMap2->getShaderResourceView(), light, light2);
+	shadowShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), shadowMap->getShaderResourceView(), shadowMap2->getShaderResourceView(), depthResources, light, light2, pointLight);
 	shadowShader->render(renderer->getDeviceContext(), cube->getIndexCount());
 
 	// Rendering to ortho mesh
@@ -263,11 +265,11 @@ void App1::finalPass()
 	XMMATRIX orthoViewMatrix = camera->getOrthoViewMatrix();	// Default camera position for orthographic rendering
 
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowMap->getShaderResourceView());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowMaps[1]->getShaderResourceView());
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 
 	orthoMesh2->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowMap2->getShaderResourceView());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowMaps[4]->getShaderResourceView());
 	textureShader->render(renderer->getDeviceContext(), orthoMesh2->getIndexCount());
 
 	renderer->setZBuffer(true);
@@ -292,9 +294,9 @@ void App1::gui()
 	ImGui::SliderFloat("Light Pos Y: ", &lightPos.y, 0, 10);
 	ImGui::SliderFloat("Light Pos Z: ", &lightPos.z, -15, 0);
 
-	ImGui::SliderFloat("Light Dir X: ", &lightDir.x, -1, 1);
+	ImGui::SliderFloat("Light Dir X: ", &lightDir.x, -0.1f, 0.1f);
 	ImGui::SliderFloat("Light Dir Y: ", &lightDir.y, -1, 1);
-	ImGui::SliderFloat("Light Dir Z: ", &lightDir.z, -1, 1);
+	ImGui::SliderFloat("Light Dir Z: ", &lightDir.z, -0.1f, 0.1f);
 
 	// Render UI
 	ImGui::Render();
