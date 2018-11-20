@@ -35,7 +35,7 @@ float4 main(InputType input) : SV_TARGET
 	textureColour = texture0.Sample(sampler0, input.tex);
 	lightColour = calculateLighting(-lightDirection, input.normal, diffuseColour);
 	
-	return lightColour * textureColour;
+	return /*lightColour * */textureColour;
 }
 
 

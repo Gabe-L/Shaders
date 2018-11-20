@@ -4,7 +4,7 @@
 
 TessellationShader::TessellationShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
-	initShader(L"tessellation_vs.cso", L"tessellation_hs.cso", L"tessellation_ds.cso", L"tessellation_ps.cso");
+	initShader(L"tessellation_vs.cso", L"tessellation_hs.cso", L"tessellation_ds.cso", L"grass_gs.cso", L"grass_ps.cso");
 }
 
 
@@ -58,6 +58,7 @@ void TessellationShader::initShader(WCHAR* vsFilename,  WCHAR* psFilename)
 	D3D11_BUFFER_DESC tessellationBufferDesc;
 	D3D11_BUFFER_DESC lightBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
+	D3D11_BUFFER_DESC camBufferDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -104,6 +105,14 @@ void TessellationShader::initShader(WCHAR* vsFilename,  WCHAR* psFilename)
 	lightBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
 
+	// Creating cam buffer
+	camBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	camBufferDesc.ByteWidth = sizeof(camBufferType);
+	camBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	camBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	camBufferDesc.MiscFlags = 0;
+	camBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&camBufferDesc, NULL, &camBuffer);
 
 	// Create a texture sampler state description.
 	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
@@ -122,7 +131,7 @@ void TessellationShader::initShader(WCHAR* vsFilename,  WCHAR* psFilename)
 	renderer->CreateSamplerState(&samplerDesc, &sampleState);
 }
 
-void TessellationShader::initShader(WCHAR* vsFilename, WCHAR* hsFilename, WCHAR* dsFilename, WCHAR* psFilename)
+void TessellationShader::initShader(WCHAR* vsFilename, WCHAR* hsFilename, WCHAR* dsFilename, WCHAR* gsFilename, WCHAR* psFilename)
 {
 	// InitShader must be overwritten and it will load both vertex and pixel shaders + setup buffers
 	initShader(vsFilename, psFilename);
@@ -130,6 +139,7 @@ void TessellationShader::initShader(WCHAR* vsFilename, WCHAR* hsFilename, WCHAR*
 	// Load other required shaders.
 	loadHullShader(hsFilename);
 	loadDomainShader(dsFilename);
+	loadGeometryShader(gsFilename);
 }
 
 XMFLOAT4 float3_to_float4(XMFLOAT3 input, float w_val = 0.f) //converts a float3 to a float4 for padding
@@ -137,7 +147,7 @@ XMFLOAT4 float3_to_float4(XMFLOAT3 input, float w_val = 0.f) //converts a float3
 	return XMFLOAT4(input.x, input.y, input.z, w_val);
 }
 
-void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, float tesselationFactor, XMFLOAT4 wave_info, XMFLOAT3 cameraPosition, Light* light)
+void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, float tesselationFactor, XMFLOAT4 wave_info, XMFLOAT3 cameraPosition, Light* light)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -155,7 +165,7 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr->projection = tproj;
 
 	deviceContext->Unmap(matrixBuffer, 0);
-	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
+	deviceContext->GSSetConstantBuffers(0, 1, &matrixBuffer);
 
 	// Passing in light info
 
@@ -191,9 +201,23 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->Unmap(tessellationBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &tessellationBuffer);
 
+	camBufferType* camPtr;
+	deviceContext->Map(camBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	camPtr = (camBufferType*)mappedResource.pData;
+
+	camPtr->camPos = float3_to_float4(cameraPosition);
+	camPtr->time = wave_info.x;
+	camPtr->padding = XMFLOAT3(0, 0, 0);
+
+	deviceContext->Unmap(camBuffer, 0);
+	deviceContext->GSSetConstantBuffers(1, 1, &camBuffer);
+
 	// Set shader texture resource in the pixel shader.
-	deviceContext->PSSetShaderResources(0, 1, &texture);
+	deviceContext->PSSetShaderResources(0, 1, &heightTexture);
+	deviceContext->PSSetShaderResources(1, 1, &grassTexture);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
+	deviceContext->DSSetShaderResources(0, 1, &heightTexture);
+	deviceContext->DSSetSamplers(0, 1, &sampleState);
 
 }
 

@@ -45,13 +45,14 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	light->setPosition(-10.f, 10.f, 0.f);
 	light->generateProjectionMatrix(0.1f, 100.f);
 	//light->generateOrthoMatrix(sceneWidth, sceneHeight, 0.1f, 100.f);
+	
+	lightPos = XMFLOAT3(0, 10, -15);
+	lightDir = XMFLOAT3(0.0f, -1.0f, 1.0f);
 
 	light2 = new Light;
 	light2->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
 	light2->setDiffuseColour(0.0f, 1.0f, 0.0f, 1.0f);
-	light2->setDirection(0.0f, -0.7f, 0.7f);
-	lightPos = XMFLOAT3(0, 10, -15);
-	lightDir = XMFLOAT3(0, -1, 1);
+	light2->setDirection(lightDir.x, lightDir.y, lightDir.z);
 	light2->setPosition(lightPos.x, lightPos.y, lightPos.z);
 	light2->generateProjectionMatrix(0.5f, 100.f);
 	//light2->generateOrthoMatrix(sceneWidth, sceneHeight, 0.1f, 100.f);
@@ -95,8 +96,9 @@ bool App1::render()
 {
 	rotationTrack += timer->getTime();
 	// Perform depth pass for light one and light2
-	depthPass(light, shadowMap, 0);
+	//depthPass(light, shadowMap, 0);
 	depthPass(light2, shadowMap2, 1);
+	
 
 	// Render scene
 	finalPass();
@@ -141,6 +143,10 @@ void App1::depthPass(Light* light_used, RenderTexture* texture_target, int matri
 	//lgtUp = XMVector3Normalize(lgtUp);
 
 	XMMATRIX testMatrix = XMMatrixLookToLH(lgtPos, lgtDir, lgtUp);
+	
+	XMFLOAT3 yAx = XMFLOAT3(0, 1, 0);
+
+	XMVECTOR yAxis = XMLoadFloat3(&yAx);
 
 	XMMATRIX lightViewMatrix = testMatrix;
 
@@ -258,7 +264,7 @@ void App1::finalPass()
 
 	orthoMesh->sendData(renderer->getDeviceContext());
 	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowMap->getShaderResourceView());
-	//textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
+	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 
 	orthoMesh2->sendData(renderer->getDeviceContext());
 	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowMap2->getShaderResourceView());

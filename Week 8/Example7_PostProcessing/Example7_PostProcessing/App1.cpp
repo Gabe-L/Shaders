@@ -15,8 +15,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	resolution = XMFLOAT2(screenWidth, screenHeight);
 
 	// Create Mesh object and shader object
-	textureMgr->loadTexture("brick", L"res/wood.png");
+	textureMgr->loadTexture("brick", L"res/brick1.dds");
+	textureMgr->loadTexture("wood", L"res/wood.png");
 	cubeMesh = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
+	plane = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext(), 100);
+	sphereMesh = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext());
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);	// Full screen size
 	smallOrthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);	// Small screen size
 	
@@ -41,6 +44,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	camDepth = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
 	blurDirection = 0.f;
+
+	_near = SCREEN_NEAR;
+	_far = SCREEN_DEPTH;
+	_range = 0.5f;
+	_dist = 1.0f;
 
 	light = new Light;
 	light->setAmbientColour(0.0f, 0.0f, 0.0f, 1.0f);
@@ -113,10 +121,22 @@ void App1::firstPass()
 	XMMATRIX viewMatrix = camera->getViewMatrix();
 	XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
 
+
 	// Render shape with simple lighting shader set.
 	cubeMesh->sendData(renderer->getDeviceContext());
 	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), light);
 	lightShader->render(renderer->getDeviceContext(), cubeMesh->getIndexCount());
+	
+	worldMatrix = XMMatrixTranslation(-50.f, -1.f, -10.f);
+	plane->sendData(renderer->getDeviceContext());
+	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("wood"), light);
+	lightShader->render(renderer->getDeviceContext(), plane->getIndexCount());
+
+	worldMatrix = XMMatrixTranslation(-5.0f, 0.0f, 15.0f);
+
+	sphereMesh->sendData(renderer->getDeviceContext());
+	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), light);
+	lightShader->render(renderer->getDeviceContext(), sphereMesh->getIndexCount());
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	renderer->setBackBufferRenderTarget();
@@ -250,7 +270,7 @@ void App1::dofPass()
 	// Render for up sample
 	renderer->setZBuffer(false);
 	orthoMesh->sendData(renderer->getDeviceContext());
-	dofShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, renderTexture->getShaderResourceView(), verticalBlurTexture->getShaderResourceView(), camDepth->getShaderResourceView());
+	dofShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, renderTexture->getShaderResourceView(), verticalBlurTexture->getShaderResourceView(), camDepth->getShaderResourceView(), _dist, _far, _near, _range);
 	dofShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 
@@ -294,6 +314,10 @@ void App1::gui()
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 	ImGui::SliderAngle("Blur direction: ", &blurDirection, 0);
 	ImGui::SliderFloat("Blur distance: ", &blurDist, 0.f, 5.f);
+	ImGui::SliderFloat("DoF distance: ", &_dist, 0.f, 1.0f);
+	ImGui::SliderFloat("Dof range: ", &_range, 0.f, 10.0f);
+
+	
 
 	horScale = blurDist * sinf(blurDirection);
 	verScale = blurDist * cosf(blurDirection);
@@ -349,16 +373,27 @@ void App1::depthPass(Camera * cam, RenderTexture * texture_target)
 	XMMATRIX lightProjectionMatrix = renderer->getProjectionMatrix();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
-	//worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
+
 	// Render floor
 	cubeMesh->sendData(renderer->getDeviceContext());
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
 	depthShader->render(renderer->getDeviceContext(), cubeMesh->getIndexCount());
 
-	worldMatrix = renderer->getWorldMatrix();
+	worldMatrix = XMMatrixTranslation(-50.f, -1.f, -10.f);
+	plane->sendData(renderer->getDeviceContext());
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthShader->render(renderer->getDeviceContext(), plane->getIndexCount());
+
+	/*worldMatrix = renderer->getWorldMatrix();
 	worldMatrix = XMMatrixTranslation(0.f, 7.f, 5.f);
 	XMMATRIX scaleMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-	worldMatrix = XMMatrixMultiply(worldMatrix, scaleMatrix);
+	worldMatrix = XMMatrixMultiply(worldMatrix, scaleMatrix);*/
+
+	worldMatrix = XMMatrixTranslation(-5.0f, 0.0f, 15.0f);
+
+	sphereMesh->sendData(renderer->getDeviceContext());
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthShader->render(renderer->getDeviceContext(), sphereMesh->getIndexCount());
 
 	// Set back buffer as render target and reset view port.
 	renderer->setBackBufferRenderTarget();

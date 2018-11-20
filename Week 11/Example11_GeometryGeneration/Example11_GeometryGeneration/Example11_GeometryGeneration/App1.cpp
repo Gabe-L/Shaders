@@ -15,7 +15,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	// Create Mesh object and shader object
 	mesh = new QuadPointMesh(renderer->getDevice(), renderer->getDeviceContext());
 	plane = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext());
-	textureMgr->loadTexture("brick", L"res/bunny.png");
+	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	textureMgr->loadTexture("grass", L"res/ramp_grass.png");
 	geometryShader = new GeometryShader(renderer->getDevice(), hwnd);
 	textureShader = new TextureShader(renderer->getDevice(), hwnd);
@@ -76,11 +76,11 @@ bool App1::render()
 
 	// Send geometry data, set shader parameters, render object with shader
 	mesh->sendData(renderer->getDeviceContext());
-	geometryShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), testLight, camera->getPosition(), timeTrack);
+	//geometryShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), testLight, camera->getPosition(), timeTrack);
 	//geometryShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	plane->sendData(renderer->getDeviceContext());
-	geometryShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), testLight, camera->getPosition(), timeTrack);
+	geometryShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("brick"), testLight, camera->getPosition(), timeTrack);
 	geometryShader->render(renderer->getDeviceContext(), plane->getIndexCount());
 
 	// Render GUI

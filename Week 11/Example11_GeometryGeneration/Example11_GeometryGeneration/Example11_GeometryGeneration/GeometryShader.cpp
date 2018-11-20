@@ -110,7 +110,7 @@ XMFLOAT4 float3_to_float4(XMFLOAT3 input, float w_val = 0.f) //converts a float3
 	return XMFLOAT4(input.x, input.y, input.z, w_val);
 }
 
-void GeometryShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, Light* light, XMFLOAT3 _camPos, float time)
+void GeometryShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* planeTexture, Light* light, XMFLOAT3 _camPos, float time)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
@@ -155,6 +155,7 @@ void GeometryShader::setShaderParameters(ID3D11DeviceContext* deviceContext, con
 	deviceContext->GSSetConstantBuffers(0, 1, &matrixBuffer);
 
 	deviceContext->PSSetShaderResources(0, 1, &texture);
+	deviceContext->PSSetShaderResources(1, 1, &planeTexture);
 
 }
 

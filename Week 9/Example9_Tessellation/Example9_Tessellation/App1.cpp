@@ -16,9 +16,12 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	//mesh = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext(), 1);
 	
 	mesh = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext(), 10, 10);
+	plane = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext());
 
 	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	textureMgr->loadTexture("grass", L"res/ramp_grass.png");
+	textureMgr->loadTexture("height", L"res/height.png");
+
 	shader = new TessellationShader(renderer->getDevice(), hwnd);
 	grassShader = new GrassShader(renderer->getDevice(), hwnd);
 
@@ -82,11 +85,12 @@ bool App1::render()
 
 	// Send geometry data, set shader parameters, render object with shader
 	mesh->sendData(renderer->getDeviceContext());
-	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), tessFactor, wave_info, camera->getPosition(), testLight);
+	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), textureMgr->getTexture("grass"), textureMgr->getTexture("height"), tessFactor, wave_info, camera->getPosition(), testLight);
 	shader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
-	//grassShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), testLight, camera->getPosition(), wave_info.x);
-	//grassShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+	//plane->sendData(renderer->getDeviceContext());
+	//grassShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), testLight, camera->getPosition(), wave_info.x);
+	//grassShader->render(renderer->getDeviceContext(), plane->getIndexCount());
 
 	// Render GUI
 	gui();

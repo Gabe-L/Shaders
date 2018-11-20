@@ -32,16 +32,23 @@ private:
 		float speed;
 	};
 
+	struct camBufferType
+	{
+		XMFLOAT4 camPos;
+		float time;
+		XMFLOAT3 padding;
+	};
+
 public:
 
 	TessellationShader(ID3D11Device* device, HWND hwnd);
 	~TessellationShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, float tesselationFactor, XMFLOAT4 wave_info, XMFLOAT3 cameraPosition, Light* light);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, float tesselationFactor, XMFLOAT4 wave_info, XMFLOAT3 cameraPosition, Light* light);
 
 private:
 	void initShader(WCHAR* vsFilename, WCHAR* psFilename);
-	void initShader(WCHAR* vsFilename, WCHAR* hsFilename, WCHAR* dsFilename, WCHAR* psFilename);
+	void initShader(WCHAR* vsFilename, WCHAR* hsFilename, WCHAR* dsFilename, WCHAR* gsFilename, WCHAR* psFilename);
 
 private:
 	ID3D11Buffer* matrixBuffer;
@@ -49,4 +56,5 @@ private:
 	ID3D11Buffer* timeBuffer;
 	ID3D11Buffer* tessellationBuffer;
 	ID3D11Buffer* lightBuffer;
+	ID3D11Buffer* camBuffer;
 };

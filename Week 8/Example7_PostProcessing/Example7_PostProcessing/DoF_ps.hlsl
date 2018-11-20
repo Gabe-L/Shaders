@@ -7,6 +7,14 @@ Texture2D normalTexture : register(t1);
 Texture2D blurTexture : register(t2);
 SamplerState Sampler0 : register(s0);
 
+cbuffer DoFBuffer : register(b0)
+{
+	float Near;
+	float Far;
+	float Range;
+	float dist;
+};
+
 struct InputType
 {
     float4 position : SV_POSITION;
@@ -21,23 +29,39 @@ float4 main(InputType input) : SV_TARGET
     float4 normalColor = normalTexture.Sample(Sampler0, input.tex);
     float4 blurColor = blurTexture.Sample(Sampler0, input.tex);
     float depthVal = depthTexture.Sample(Sampler0, input.tex).r;
-    depthVal = 1.0f - depthVal;
+	depthVal = 1.0f - depthVal;
 
+	if (depthVal == 0.0f) {
+		return blurColor;
+	}
 
     // Hard coded values for now
 
-    float Near = 1.0f;
-    float Far = 100.0f / 99.0f;
-    float Range = 5.0f;
-
+    //float Near = 1.0f;
+    //float Far = 100.0f / 99.0f;
+    //float Range = 0.5f;
+	float Dist = depthTexture.Sample(Sampler0, float2(0.5f, 0.5f)).r;
     //--------------------------
+	Dist = 1.0f - Dist;
+	
+	// Convert depth values to distance from near to far plane
+	Dist *= (Far - Near);
+	depthVal *= (Far - Near);
 
-    float Dz = -Near * Far;
-    Dz /= depthVal - Far;
+	float far = Far / (Far - Near);
+
+    float Dz = -Near * far;
+    Dz /= Dist * - far;
 
     float blurVal = saturate(abs(Dz - depthVal) / Range);
+	//return float4(depthVal, depthVal, depthVal, 1.0f);
 
-    float4 returnColor = lerp(normalColor, blurColor, blurVal);
+	// Get difference between current fragment and focal distance, divide by range for 
+	float diff = abs((depthVal - Dist) / Range);
+	//diff /= Range;
+	//diff /= Far;
+	diff = saturate(diff);
+    float4 returnColor = lerp(normalColor, blurColor, diff);
 
     return returnColor;
 }

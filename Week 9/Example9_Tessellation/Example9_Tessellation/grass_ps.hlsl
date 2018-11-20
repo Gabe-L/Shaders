@@ -1,4 +1,5 @@
 Texture2D texture0 : register(t0);
+Texture2D grassTex : register(t1);
 SamplerState Sampler0 : register(s0);
 
 cbuffer LightBuffer : register(b0)
@@ -13,7 +14,7 @@ struct InputType
     float4 position : SV_POSITION;
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
-    float3 worldPosition : TEXCOORD1;
+    float4 worldPosition : TEXCOORD1;
 };
 
 float4 calculateLighting(float3 lightDirection, float3 normal, float4 ldiffuse)
@@ -25,6 +26,10 @@ float4 calculateLighting(float3 lightDirection, float3 normal, float4 ldiffuse)
 
 float4 main(InputType input) : SV_TARGET
 {
+
+	if (input.worldPosition.w == 0.0f) {
+		return grassTex.Sample(Sampler0, input.tex);
+	}
 
     float xRamp = input.position.y / 2.0f;
 
@@ -40,5 +45,6 @@ float4 main(InputType input) : SV_TARGET
     lightColour += ambient;
 
     //return float4(0, 0.4, 0, 1);
+	return textureColor;
     return saturate(lightColour) * textureColor;
 }

@@ -53,18 +53,18 @@ float4 main(InputType input) : SV_TARGET
     // Determine if the projected coordinates are in the 0 to 1 range.  If not don't do lighting.
     if (!(pTexCoord.x < 0.f || pTexCoord.x > 1.f || pTexCoord.y < 0.f || pTexCoord.y > 1.f))
     {
-        // Sample the shadow map (get depth of geometry)
-        depthValue = depthMapTexture.Sample(shadowSampler, pTexCoord).r;
-	    // Calculate the depth from the light.
-        lightDepthValue = input.lightViewPos.z / input.lightViewPos.w;
-        lightDepthValue -= shadowMapBias;
-
-	    // Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
-        if (lightDepthValue < depthValue)
-        {
-            //colour += calculateLighting(-direction[0].xyz, input.normal, diffuse[0]);
-        }
-        lit = 1;
+        //// Sample the shadow map (get depth of geometry)
+        //depthValue = depthMapTexture.Sample(shadowSampler, pTexCoord).r;
+	    //// Calculate the depth from the light.
+        //lightDepthValue = input.lightViewPos.z / input.lightViewPos.w;
+        //lightDepthValue -= shadowMapBias;
+        //
+	    //// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
+        //if (lightDepthValue < depthValue)
+        //{
+        //    //colour += calculateLighting(-direction[0].xyz, input.normal, diffuse[0]);
+        //}
+        //lit = 1;
     }
 
     // Determine if the projected coordinates are in the 0 to 1 range.  If not don't do lighting.
@@ -87,11 +87,11 @@ float4 main(InputType input) : SV_TARGET
 
     if (lit == 0)
     {
-        return textureColour;
+        return ambient[0] * textureColour;
     }
     else
     {
-		colour = saturate(colour +ambient[0]);
+		colour = saturate(colour + ambient[0]);
         return colour * textureColour;
     }
 }

@@ -41,6 +41,7 @@ void DoFShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 {
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
+	D3D11_BUFFER_DESC dofBufferDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -71,10 +72,18 @@ void DoFShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 	// Create the texture sampler state.
 	renderer->CreateSamplerState(&samplerDesc, &sampleState);
 
+	dofBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	dofBufferDesc.ByteWidth = sizeof(DoFBufferType);
+	dofBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	dofBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	dofBufferDesc.MiscFlags = 0;
+	dofBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&dofBufferDesc, NULL, &dofBuffer);
+
 }
 
 
-void DoFShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* blurTexture, ID3D11ShaderResourceView* depthTexture)
+void DoFShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* blurTexture, ID3D11ShaderResourceView* depthTexture, float _dist, float _far, float _near, float _range)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -94,6 +103,16 @@ void DoFShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XM
 	dataPtr->projection = tproj;
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
+
+	DoFBufferType* dofPtr;
+	deviceContext->Map(dofBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	dofPtr = (DoFBufferType*)mappedResource.pData;
+	dofPtr->Dist = _dist;
+	dofPtr->Far = _far;
+	dofPtr->Near = _near;
+	dofPtr->Range = _range;
+	deviceContext->Unmap(dofBuffer, 0);
+	deviceContext->PSSetConstantBuffers(0, 1, &dofBuffer);
 
 	// Set shader texture and sampler resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &depthTexture);

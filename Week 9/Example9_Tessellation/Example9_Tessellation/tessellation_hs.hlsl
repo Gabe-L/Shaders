@@ -9,7 +9,7 @@ cbuffer TessellationBuffer : register(b0)
 
 struct InputType
 {
-    float3 position : POSITION;
+    float4 position : POSITION;
     //float4 colour : COLOR;
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
@@ -23,7 +23,7 @@ struct ConstantOutputType
 
 struct OutputType
 {
-    float3 position : POSITION;
+    float4 position : POSITION;
     //float4 colour : COLOR;
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
@@ -40,9 +40,9 @@ ConstantOutputType PatchConstantFunction(InputPatch<InputType, 4> inputPatch, ui
 
     avgPos /= 4;
 
-    float distance = pow(cameraPosition.x - avgPos.x, 2) + pow(cameraPosition.y - avgPos.y, 2) + pow(cameraPosition.z - avgPos.z, 2);
+    float distance = pow(cameraPosition.x - avgPos.x, 2) + /*pow(cameraPosition.y - avgPos.y, 2) + */pow(cameraPosition.z - avgPos.z, 2);
     distance = sqrt(distance);
-
+	distance /= 2;
     // Set the tessellation factors for the three edges of the triangle.
 	output.edges[0] = tessFactor;// / distance;
 	output.edges[1] = tessFactor;// / distance;

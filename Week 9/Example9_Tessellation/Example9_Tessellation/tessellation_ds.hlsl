@@ -1,6 +1,9 @@
 // Tessellation domain shader
 // After tessellation the domain shader processes the all the vertices
 
+Texture2D heightMap : register(t0);
+SamplerState Sampler0 : register(s0);
+
 cbuffer MatrixBuffer : register(b0)
 {
     matrix worldMatrix;
@@ -24,7 +27,7 @@ struct ConstantOutputType
 
 struct InputType
 {
-    float3 position : POSITION;
+    float4 position : POSITION;
     //float4 colour : COLOR;
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
@@ -32,17 +35,17 @@ struct InputType
 
 struct OutputType
 {
-    float4 position : SV_POSITION;
+    float4 position : POSITION;
     //float4 colour : COLOR;
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-    float3 worldPosition : TEXCOORD1;
+    //float3 worldPosition : TEXCOORD1;
 };
 
 [domain("quad")]
 OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, const OutputPatch<InputType, 4> patch)
 {
-	float3 vertexPosition;
+	float4 vertexPosition;
 	float3 vertexNormal;
     OutputType output;
  
@@ -53,9 +56,17 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
     // For triangles
     //vertexPosition = uvwCoord.x * patch[0].position + -uvwCoord.y * patch[1].position + -uvwCoord.z * patch[2].position;
 	
+	// Calculate tex coords
+	float2 t1 = lerp(patch[0].tex, patch[1].tex, uvwCoord.y);
+	float2 t2 = lerp(patch[3].tex, patch[2].tex, uvwCoord.y);
+
+	float2 texCoord = lerp(t1, t2, uvwCoord.x);
+
+	output.tex = texCoord;
+
     // For quads
-    float3 v1 = lerp(patch[0].position, patch[1].position, uvwCoord.y);
-    float3 v2 = lerp(patch[3].position, patch[2].position, uvwCoord.y);
+    float4 v1 = lerp(patch[0].position, patch[1].position, uvwCoord.y);
+    float4 v2 = lerp(patch[3].position, patch[2].position, uvwCoord.y);
     
     vertexPosition = lerp(v1, v2, uvwCoord.x);
 
@@ -64,33 +75,31 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 
 
 	//offset position based on sine wave
-    vertexPosition.y = height * (sin((vertexPosition.x * freq) + (time * speed)));
+    //vertexPosition.y = height * (sin((vertexPosition.x * freq) + (time * speed)));
+
+	float4 colour = heightMap.SampleLevel(Sampler0, texCoord, 0);
+	vertexPosition.y = 10 * colour.r;
 
 	//modify normals
     vertexNormal.x = 1 - (height * cos((vertexPosition.x * freq) + (time * speed)));
     vertexNormal.y = abs(height * cos((vertexPosition.x * freq) + (time * speed)));
 
+	output.position = vertexPosition;
     // Calculate the position of the new vertex against the world, view, and projection matrices.
-    output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
-    output.position = mul(output.position, viewMatrix);
-    output.position = mul(output.position, projectionMatrix);
+    //output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
+    //output.position = mul(output.position, viewMatrix);
+    //output.position = mul(output.position, projectionMatrix);
 
 	// Calculate the normal vector against the world matrix only and normalise.
-	output.normal = mul(vertexNormal, (float3x3)worldMatrix);
-	output.normal = normalize(output.normal);
+	
+	output.normal = vertexNormal;
+	//output.normal = mul(vertexNormal, (float3x3)worldMatrix);
+	//output.normal = normalize(output.normal);
 
     // Send the input color into the pixel shader.
     //output.colour = patch[0].colour;
 
-    // Calculate tex coords
-    float2 t1 = lerp(patch[0].tex, patch[1].tex, uvwCoord.y);
-    float2 t2 = lerp(patch[3].tex, patch[2].tex, uvwCoord.y);
-
-    float2 texCoord = lerp(t1, t2, uvwCoord.x);
-
-    output.tex = texCoord;
-
-    output.worldPosition = mul(float4(vertexPosition, 1.0f), worldMatrix).xyz;
+    //output.worldPosition = mul(vertexPosition, worldMatrix).xyz;
 
     return output;
 }

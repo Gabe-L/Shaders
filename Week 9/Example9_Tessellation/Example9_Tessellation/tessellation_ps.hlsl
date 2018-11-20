@@ -17,7 +17,7 @@ struct InputType
     //float4 colour : COLOR;
     float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-    float3 worldPosition : TEXCOORD1;
+    float4 worldPosition : TEXCOORD1;
 };
 
 // Calculate lighting intensity based on direction and normal. Combine with light colour.
@@ -30,6 +30,7 @@ float4 calculateLighting(float3 lightDirection, float3 normal, float4 ldiffuse)
 
 float4 main(InputType input) : SV_TARGET
 {
+
     float4 textureColor = texture0.Sample(Sampler0, input.tex);
     float4 lightColour = 0.f;
 
@@ -40,5 +41,5 @@ float4 main(InputType input) : SV_TARGET
 
     lightColour += ambient;
 
-    return saturate(lightColour) * textureColor;
+    return /*saturate(lightColour) **/ textureColor;
 }

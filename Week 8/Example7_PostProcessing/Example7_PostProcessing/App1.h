@@ -44,7 +44,11 @@ private:
 	float blurDist;
 	float horScale, verScale;
 
+	float _dist, _near, _far, _range;
+
 	CubeMesh* cubeMesh;
+	PlaneMesh* plane;
+	SphereMesh* sphereMesh;
 	OrthoMesh* orthoMesh;
 	OrthoMesh* smallOrthoMesh;
 

@@ -27,7 +27,8 @@ private:
 	//TessellationMesh* mesh;
 	//TesselatedQuadMesh* mesh;
 	TessellatedPlane* mesh;
-	
+	PlaneMesh* plane;
+
 	TessellationShader* shader;
 	
 	Light* testLight;
