@@ -28,6 +28,12 @@
     <Filter Include="Resource Files\Shadow">
       <UniqueIdentifier>{3554980b-89e7-4981-9da4-2f3e49bfbc2b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Explosion">
+      <UniqueIdentifier>{f8ec16ed-2d3e-4514-b0b1-66a7e4e4718d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\DoF/Blur">
+      <UniqueIdentifier>{4e6aaab6-4aa4-46e8-9ef9-09c686d8c15c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App1.cpp">
@@ -54,6 +60,15 @@
     <ClCompile Include="ShadowShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ExplosionShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlurShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DoFShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -75,6 +90,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ShadowShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExplosionShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BlurShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DoFShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -117,6 +141,21 @@
     </FxCompile>
     <FxCompile Include="shadow_ps.hlsl">
       <Filter>Resource Files\Shadow</Filter>
+    </FxCompile>
+    <FxCompile Include="explosion_vs.hlsl">
+      <Filter>Resource Files\Explosion</Filter>
+    </FxCompile>
+    <FxCompile Include="explosion_ps.hlsl">
+      <Filter>Resource Files\Explosion</Filter>
+    </FxCompile>
+    <FxCompile Include="blur_vs.hlsl">
+      <Filter>Resource Files\DoF/Blur</Filter>
+    </FxCompile>
+    <FxCompile Include="blur_ps.hlsl">
+      <Filter>Resource Files\DoF/Blur</Filter>
+    </FxCompile>
+    <FxCompile Include="DoF_ps.hlsl">
+      <Filter>Resource Files\DoF/Blur</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

@@ -5,14 +5,14 @@ Depth of field			-> Week08/Example7
 
 Explosion shader
 ----------------
-- Only affects explosions, and intensity of one light at a time
+- Only effects explosions, and intensity of one light at a time
 - Shaders:
  - Vertex Shader (Multi channel height map displacement)
  - Pixel Shader  (Samples colour ramp texture for displacement)
 
 Tessellation/Geometry Shader
 ----------------------------
-- Affects terrain and grass generated on terrain
+- Effects terrain and grass generated on terrain
 - Shaders:
  - Vertex Shader (Passing info forward)
  - Hull Shader (Calculating tess factor)
@@ -22,7 +22,7 @@ Tessellation/Geometry Shader
 
 Shadow Map/Lights
 -----------------
-- Affects every object (except explosions)
+- Effects every object (except explosions)
 - Depth Shader also required
 - Shaders:
  - Vertex Shader (Calculating light info for vertices, passing forward)

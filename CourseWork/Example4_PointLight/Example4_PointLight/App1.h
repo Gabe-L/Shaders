@@ -4,14 +4,18 @@
 
 // Includes
 #include "DXF.h"	// include dxframework
+#include "ExplosionShader.h"
 #include "LightShader.h"
-#include "TessellatedPlane.h"
 #include "TerrainShader.h"
-#include "OrthoMesh.h"
 #include "TextureShader.h"
-#include "DepthShader.h"
-#include "CubeMesh.h"
 #include "ShadowShader.h"
+#include "BlurShader.h"
+#include "DepthShader.h"
+#include "DoFShader.h"
+#include "TessellatedPlane.h"
+#include "OrthoMesh.h"
+#include "CubeMesh.h"
+#include "SphereMesh.h"
 
 class App1 : public BaseApplication
 {
@@ -27,15 +31,15 @@ protected:
 	bool render();
 	void gui();
 
-	void depthPass(Light* lightUsed, RenderTexture* texture_target, bool ortho);
+	void depthPass(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, RenderTexture* texture_target);
 
-	void FirstPass();
-	void ShadowPass();
-	void FinalPass();
+	RenderTexture* FirstPass(RenderTexture* inputTexture);
+	RenderTexture* HorizontalBlur(RenderTexture* inputTexture);
+	RenderTexture* VerticalBlur(RenderTexture* inputTexture);
+	RenderTexture* DoFPass(RenderTexture* inputTexture);
+	void FinalPass(RenderTexture* inputTexture);
 
 private:
-
-	float timeTrack;
 
 	// Terrain
 	TessellatedPlane* terrain;
@@ -44,7 +48,7 @@ private:
 	
 	// Post processing
 	OrthoMesh* orthoMesh;
-	RenderTexture* defaultView;
+	RenderTexture* targetTexture;
 	TextureShader* textureShader;
 
 	// Depth
@@ -59,6 +63,25 @@ private:
 
 	// Test cube
 	CubeMesh* cubeMesh;
+	XMFLOAT3 lightPos;
+
+	// Explosion
+	ExplosionShader* explosionShader;
+	XMFLOAT3 lightDiffuse;
+	SphereMesh* explosionSphere;
+	float explosionTimer;
+	float timeTrack;
+
+	// Depth of Field / Blur
+	BlurShader* blurShader;
+	DoFShader* dofShader;
+	RenderTexture* horizontalBlurTexture;
+	RenderTexture* verticalBlurTexture;
+	RenderTexture* cameraDepth;
+	RenderTexture* DoFTexture;
+
+	// Testing purposes
+	RenderTexture* debugTexture;
 
 };
 

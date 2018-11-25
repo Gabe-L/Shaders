@@ -38,37 +38,6 @@ struct PS_OUTPUT
 float4 main(InputType input) : SV_TARGET
 {
 
- //   PS_OUTPUT output;
-
- //   if (input.worldPosition.w == 0.0f)
- //   {
- //       output.colour = grassTex.Sample(Sampler0, input.tex);
- //   }
- //   else
- //   {
- //       float xRamp = input.position.y / 2.0f;
-
- //       float4 textureColor = grassTex.Sample(Sampler0, input.tex);
- //       float4 lightColour = 0.f;
-
- //       float3 lightVector = position.xyz;
- //       lightVector = normalize(lightVector);
-
- //       lightColour += calculateLighting(-lightVector, input.normal, diffuse);
- //       lightColour += ambient;
-
-
- //       output.colour = saturate(lightColour) * textureColor;
- //   }
-
- //   float depthValue;
-	//// Get the depth value of the pixel by dividing the Z pixel depth by the homogeneous W coordinate.
- //   depthValue = input.position.z / input.position.w;
-    
- //   output.cameraDepth = float4(depthValue, depthValue, depthValue, 1.0f);
-
- //   return output.colour;
-
     float depthValue;
     float lightDepthValue;
     float shadowMapBias = 0.005f;

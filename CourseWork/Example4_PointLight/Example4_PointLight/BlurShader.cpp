@@ -1,14 +1,14 @@
-// Horizontal blur shader
-#include "horizontalblurshader.h"
+// blur shader
+#include "BlurShader.h"
 
 
-HorizontalBlurShader::HorizontalBlurShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
+BlurShader::BlurShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
-	initShader(L"horizontalBlur_vs.cso", L"horizontalBlur_ps.cso");
+	initShader(L"blur_vs.cso", L"blur_ps.cso");
 }
 
 
-HorizontalBlurShader::~HorizontalBlurShader()
+BlurShader::~BlurShader()
 {
 	if (sampleState)
 	{
@@ -36,7 +36,7 @@ HorizontalBlurShader::~HorizontalBlurShader()
 }
 
 
-void HorizontalBlurShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
+void BlurShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 {
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
@@ -83,7 +83,7 @@ void HorizontalBlurShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 }
 
 
-void HorizontalBlurShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, float dimension, XMFLOAT2 scale)
+void BlurShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, float dimension, XMFLOAT2 scale)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
@@ -118,6 +118,3 @@ void HorizontalBlurShader::setShaderParameters(ID3D11DeviceContext* deviceContex
 	deviceContext->PSSetShaderResources(0, 1, &texture);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 }
-
-
-

@@ -22,18 +22,19 @@ float4 main(InputType input) : SV_TARGET
 	// Initialize the colour to black.
     colour = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
-	float weight[20];
+    float weight[20];
 	// Calculate weighting values
     weight[0] = 0.15f;
-	float remainder = (1.0f - weight[0]);
+    float remainder = (1.0f - weight[0]);
     remainder /= 2.0f;
 
-	for (int i = 1; i < 20; i++) {
+    for (int i = 1; i < 20; i++)
+    {
         weight[i] = remainder / 2.0f;
-		remainder -= weight[i];
-	}
+        remainder -= weight[i];
+    }
 
-	weight[0] += remainder;
+    weight[0] += remainder;
 
 
     float texelSize = 1.0f / screenDimension;
