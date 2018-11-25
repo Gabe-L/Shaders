@@ -8,13 +8,6 @@ using namespace DirectX;
 class LightShader : public BaseShader
 {
 private:
-	struct LightBufferType
-	{
-		XMFLOAT4 ambient;
-		XMFLOAT4 diffuse;
-		XMFLOAT3 position;
-		float padding;
-	};
 
 	struct TimeBufferType
 	{
@@ -33,7 +26,6 @@ private:
 private:
 	ID3D11Buffer * matrixBuffer;
 	ID3D11SamplerState* sampleState;
-	ID3D11Buffer* lightBuffer;
 	ID3D11Buffer* timeBuffer;
 };
 

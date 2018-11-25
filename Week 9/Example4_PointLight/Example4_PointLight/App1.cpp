@@ -14,7 +14,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	// Create Mesh object and shader object
-	explosionMesh = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext(), 100);
+	explosionMesh = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext(), 50);
 	textureMgr->loadTexture("compose", L"../res/smoke-compose.png");
 	textureMgr->loadTexture("burn", L"../res/burn.png");
 	shader = new LightShader(renderer->getDevice(), hwnd);
@@ -22,9 +22,10 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	light->setAmbientColour(0.5f, 0.5f, 0.5f, 1.0f);
 	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
 	light->setPosition(0.0f, 0.0f, 0.0f);
-
+	
+	explosionTime = 0.0f;
 	timeTrack = 0.0f;
-	explodeOffset = 0.0f;
+	explodeOffset = 1.0f;
 
 }
 
@@ -85,10 +86,15 @@ bool App1::render()
 	projectionMatrix = renderer->getProjectionMatrix();
 
 	timeTrack += timer->getTime();
+	explosionTime += timer->getTime();
+
+	if (explosionTime > 3.0f) {
+		explosionTime = 0.0f;
+	}
 
 	// Send geometry data, set shader parameters, render object with shader
 	explosionMesh->sendData(renderer->getDeviceContext());
-	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("compose"), textureMgr->getTexture("burn"), light, timeTrack, explodeOffset);
+	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("compose"), textureMgr->getTexture("burn"), light, timeTrack, explosionTime);
 	shader->render(renderer->getDeviceContext(), explosionMesh->getIndexCount());
 
 	// Render GUI
@@ -110,7 +116,7 @@ void App1::gui()
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
-	ImGui::SliderFloat("Explode Offset: ", &explodeOffset, 0.0f, 1.0f);
+	ImGui::SliderFloat("Explode Offset: ", &explodeOffset, 0.0f, 2.0f);
 
 	// Render UI
 	ImGui::Render();

@@ -20,7 +20,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	textureMgr->loadTexture("grass", L"res/ramp_grass.png");
-	textureMgr->loadTexture("height", L"res/height.png");
+	textureMgr->loadTexture("height", L"res/cratertest.png");
 
 	shader = new TessellationShader(renderer->getDevice(), hwnd);
 	grassShader = new GrassShader(renderer->getDevice(), hwnd);
@@ -118,9 +118,9 @@ void App1::gui()
 
 	ImGui::SliderInt("Tessellation Factor: ", &tessFactor, 1, 64);
 
-	ImGui::SliderFloat("Light Pos X: ", &lightPos.x, -5.0f, 5.0f);
+	ImGui::SliderFloat("Light Pos X: ", &lightPos.x, -50.0f, 50.0f);
 	ImGui::SliderFloat("Light Pos Y: ", &lightPos.y, -5.0f, 5.0f);
-	ImGui::SliderFloat("Light Pos Z: ", &lightPos.z, -5.0f, 5.0f);
+	ImGui::SliderFloat("Light Pos Z: ", &lightPos.z, -50.0f, 50.0f);
 
 	testLight->setPosition(lightPos.x, lightPos.y, lightPos.z);
 

@@ -1,0 +1,46 @@
+Explosion shader 		-> Week09/Example4
+Tesselation/Geometry Shader	-> Week09/Example9
+Shadow Map/Lights		-> Week10/Example10
+Depth of field			-> Week08/Example7
+
+Explosion shader
+----------------
+- Only affects explosions, and intensity of one light at a time
+- Shaders:
+ - Vertex Shader (Multi channel height map displacement)
+ - Pixel Shader  (Samples colour ramp texture for displacement)
+
+Tessellation/Geometry Shader
+----------------------------
+- Affects terrain and grass generated on terrain
+- Shaders:
+ - Vertex Shader (Passing info forward)
+ - Hull Shader (Calculating tess factor)
+ - Domain Shader (Displacing terrain based on height map, recalculating normals)
+ - Geometry Shader (Generates blades of grass from tesselated points)
+ - Pixel Shader (Calculates light + texture info based on if grass or terrain)
+
+Shadow Map/Lights
+-----------------
+- Affects every object (except explosions)
+- Depth Shader also required
+- Shaders:
+ - Vertex Shader (Calculating light info for vertices, passing forward)
+ - Pixel Shader (Calculating light/shadow info for pixels based on depth maps)
+
+Depth of Field
+--------------
+- Post process
+- Hor/Vertical blur and DoF shader
+
+
+
+
+
+
+
+
+
+
+
+

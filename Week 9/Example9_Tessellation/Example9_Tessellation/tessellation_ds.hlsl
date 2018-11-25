@@ -70,7 +70,7 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
     
     vertexPosition = lerp(v1, v2, uvwCoord.x);
 
-    vertexNormal = cross(patch[0].position - patch[1].position, patch[0].position - patch[2].position);
+    vertexNormal = cross(patch[0].position.xyz - patch[1].position.xyz, patch[0].position.xyz - patch[2].position.xyz);
     vertexNormal = normalize(vertexNormal);
 
 
@@ -81,8 +81,8 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	vertexPosition.y = 10 * colour.r;
 
 	//modify normals
-    vertexNormal.x = 1 - (height * cos((vertexPosition.x * freq) + (time * speed)));
-    vertexNormal.y = abs(height * cos((vertexPosition.x * freq) + (time * speed)));
+    //vertexNormal.x = 1 - (height * cos((vertexPosition.x * freq) + (time * speed)));
+    //vertexNormal.y = abs(height * cos((vertexPosition.x * freq) + (time * speed)));
 
 	output.position = vertexPosition;
     // Calculate the position of the new vertex against the world, view, and projection matrices.

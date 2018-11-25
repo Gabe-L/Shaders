@@ -116,10 +116,10 @@ bool App1::render()
 	XMFLOAT3 directions[6] = {
 		XMFLOAT3(0.0f ,1, low),	// Up
 		XMFLOAT3(0.0f ,-1, low),	// Down
-		XMFLOAT3(1,0,0),	// Right
-		XMFLOAT3(-1,0,0),	// Left
-		XMFLOAT3(0,0,1),	// Fowards
-		XMFLOAT3(0,0,-1)	// Backwards
+		XMFLOAT3(1,-0.33f,0),	// Right
+		XMFLOAT3(-1,-0.33f,0),	// Left
+		XMFLOAT3(0,-0.33f,1),	// Fowards
+		XMFLOAT3(0,-0.33f,-1)	// Backwards
 	};
 
 
@@ -151,7 +151,7 @@ void App1::depthPass(Light* light_used, RenderTexture* texture_target)
 	// Render floor
 	mesh->sendData(renderer->getDeviceContext());
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
-	depthShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+	//depthShader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	worldMatrix = renderer->getWorldMatrix();
 	worldMatrix = XMMatrixTranslation(0.f, 7.f, 5.f);
@@ -265,7 +265,7 @@ void App1::finalPass()
 	XMMATRIX orthoViewMatrix = camera->getOrthoViewMatrix();	// Default camera position for orthographic rendering
 
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowMaps[1]->getShaderResourceView());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowMap2->getShaderResourceView());
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 
 	orthoMesh2->sendData(renderer->getDeviceContext());
@@ -296,7 +296,7 @@ void App1::gui()
 
 	ImGui::SliderFloat("Light Dir X: ", &lightDir.x, -0.1f, 0.1f);
 	ImGui::SliderFloat("Light Dir Y: ", &lightDir.y, -1, 1);
-	ImGui::SliderFloat("Light Dir Z: ", &lightDir.z, -0.1f, 0.1f);
+	ImGui::SliderFloat("Light Dir Z: ", &lightDir.z, -0.0f, 1.0f);
 
 	// Render UI
 	ImGui::Render();

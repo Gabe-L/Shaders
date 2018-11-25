@@ -27,8 +27,8 @@ struct OutputType
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float3 worldPosition : TEXCOORD1;
     float2 disp : TEXCOORD2;
+    float progress : TEXCOORD3;
 };
 
 OutputType main(InputType input)
@@ -43,7 +43,8 @@ OutputType main(InputType input)
 
     displacement /= 3;
 
-    input.position.xyz += input.normal * displacement * displacementFactor.w;
+    float progressOffset = (1.5f * displacementFactor.w);
+    input.position.xyz += input.normal * ((displacement * progressOffset) + (-1.0f + progressOffset));
 
     output.disp.x = displacement;
     output.disp.y = 0.5f;
@@ -60,7 +61,7 @@ OutputType main(InputType input)
 	output.normal = mul(input.normal, (float3x3)worldMatrix);
 	output.normal = normalize(output.normal);
 
-	output.worldPosition = mul(input.position, worldMatrix).xyz;
+    output.progress = displacementFactor.w;
 
 	return output;
 }

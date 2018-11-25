@@ -37,7 +37,7 @@ float4 main(InputType input) : SV_TARGET
     float4 textureColor = texture0.Sample(Sampler0, input.tex);
     float4 lightColour = 0.f;
 
-    float3 lightVector = position.xyz - input.worldPosition;
+    float3 lightVector = position.xyz;// -input.worldPosition.xyz;
     lightVector = normalize(lightVector);
 
     lightColour += calculateLighting(-lightVector, input.normal, diffuse);
@@ -45,6 +45,6 @@ float4 main(InputType input) : SV_TARGET
     lightColour += ambient;
 
     //return float4(0, 0.4, 0, 1);
-	return textureColor;
+	//return textureColor;
     return saturate(lightColour) * textureColor;
 }

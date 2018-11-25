@@ -27,6 +27,7 @@ private:
 	SphereMesh* explosionMesh;
 	Light* light;
 
+	float explosionTime;
 	float timeTrack;
 	float explodeOffset;
 

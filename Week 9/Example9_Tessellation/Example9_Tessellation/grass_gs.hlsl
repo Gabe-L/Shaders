@@ -44,22 +44,6 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
 {
 	OutputType output;
 
-	// Make blade of grass
-
-	float3 forward = normalize(camPos.xyz - input[0].position.xyz);
-	float3 up = float3(0, 1, 0);
-	float3 right = cross(forward, up);
-	up = cross(right, forward);
-
-	right *= 0.1f;
-	up *= 0.5f;
-
-	float3 vertPos[3];
-	vertPos[0] = input[0].position.xyz - (right / 2);
-	vertPos[1] = input[0].position.xyz + (right / 2);
-	vertPos[2] = (up * 2.0f) + input[0].position.xyz +sin(input[0].position.z * input[0].position.x + time);
-
-
 	// Append plane tri
 
 	output.worldPosition = float4(mul(input[0].position, worldMatrix).xyz, 1.0f);
@@ -88,6 +72,21 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
 
 	triStream.RestartStrip();
 	  
+    // Make blade of grass
+
+    float3 forward = normalize(camPos.xyz - input[0].position.xyz);
+    float3 up = float3(0, 1, 0);
+    float3 right = cross(forward, up);
+    up = cross(right, forward);
+
+    right *= 0.1f;
+    up *= 0.5f;
+
+    float3 vertPos[3];
+    vertPos[0] = input[0].position.xyz - (right / 2);
+    vertPos[1] = input[0].position.xyz + (right / 2);
+    vertPos[2] = (up * 2.0f) + input[0].position.xyz + sin(input[0].position.z * input[0].position.x + time);
+
 	for (int i = 0; i < 3; i++)
 	{
 	      float4 vposition = float4(vertPos[i], 1.0f); //+input[0].position;

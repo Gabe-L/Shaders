@@ -35,14 +35,17 @@ float4 calculateLighting(float3 lightDirection, float3 normal, float4 diffuse)
 float4 main(InputType input) : SV_TARGET
 {
 
-	float3 directions[6] = {
-	float3(0.1f,1,0),	// Up
-	float3(-0.1f,-1,0),	// Down
-	float3(1,0,0),	// Right
-	float3(-1,0,0),	// Left
-	float3(0,0,1),	// Fowards
-	float3(0,0,-1)	// Backwards
-	};
+    float low = 0.01f;
+
+    float3 directions[6] =
+    {
+        float3(0.0f, 1, low), // Up
+		float3(0.0f, -1, low), // Down
+		float3(1, -0.33f, 0), // Right
+		float3(-1, -0.33f, 0), // Left
+		float3(0, -0.33f, 1), // Fowards
+		float3(0, -0.33f, -1) // Backwards
+    };
 
     float depthValue;
     float lightDepthValue;
@@ -112,7 +115,7 @@ float4 main(InputType input) : SV_TARGET
 
 	// Point
 
-	for (int i = 2; i < 6; i++)
+	for (int i = 0; i < 6; i++)
 	{
 
 		float2 pTexCoords = input.lightViews[i].xy / input.lightViews[i].w;
@@ -136,11 +139,10 @@ float4 main(InputType input) : SV_TARGET
 				colour += calculateLighting(-directions[i].xyz, input.normal, diffuse[2]);
 				// Break out so multiple light values aren't given by one point light
 				lit = 1;
-				break;
 			}
 
 		}
-	}
+    }
 
     if (lit == 0)
     {
