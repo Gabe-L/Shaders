@@ -21,7 +21,8 @@ struct InputType
 	float3 normal : NORMAL;
     float4 lightViewPos : TEXCOORD1;
     float4 lightViewPos2 : TEXCOORD2;
-	float4 lightViews[6] : TEXCOORD3;
+	float3 worldPosition : TEXCOORD3;
+	float4 lightViews[6] : TEXCOORD4;
 };
 
 // Calculate lighting intensity based on direction and normal. Combine with light colour.
@@ -35,18 +36,6 @@ float4 calculateLighting(float3 lightDirection, float3 normal, float4 diffuse)
 float4 main(InputType input) : SV_TARGET
 {
 
-    float low = 0.01f;
-
-    float3 directions[6] =
-    {
-        float3(0.0f, 1, low), // Up
-		float3(0.0f, -1, low), // Down
-		float3(1, -0.33f, 0), // Right
-		float3(-1, -0.33f, 0), // Left
-		float3(0, -0.33f, 1), // Fowards
-		float3(0, -0.33f, -1) // Backwards
-    };
-
     float depthValue;
     float lightDepthValue;
     float shadowMapBias = 0.005f;
@@ -55,14 +44,14 @@ float4 main(InputType input) : SV_TARGET
     int lit = 0;
 
 	// Calculate the projected texture coordinates.
-    float2 pTexCoord = input.lightViewPos.xy / input.lightViewPos.w;
-    pTexCoord *= float2(0.5, -0.5);
-    pTexCoord += float2(0.5f, 0.5f);
+    //float2 pTexCoord = input.lightViewPos.xy / input.lightViewPos.w;
+    //pTexCoord *= float2(0.5, -0.5);
+    //pTexCoord += float2(0.5f, 0.5f);
 
-    // Calculate the projected texture coordinates.
-    float2 pTexCoord2 = input.lightViewPos2.xy / input.lightViewPos2.w;
-    pTexCoord2 *= float2(0.5, -0.5);
-    pTexCoord2 += float2(0.5f, 0.5f);
+    //// Calculate the projected texture coordinates.
+    //float2 pTexCoord2 = input.lightViewPos2.xy / input.lightViewPos2.w;
+    //pTexCoord2 *= float2(0.5, -0.5);
+    //pTexCoord2 += float2(0.5f, 0.5f);
 
 	// Directional
 
@@ -117,7 +106,6 @@ float4 main(InputType input) : SV_TARGET
 
 	for (int i = 0; i < 6; i++)
 	{
-
 		float2 pTexCoords = input.lightViews[i].xy / input.lightViews[i].w;
 		pTexCoords *= float2(0.5, -0.5);
 		pTexCoords += float2(0.5f, 0.5f);
@@ -136,9 +124,12 @@ float4 main(InputType input) : SV_TARGET
 			// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
 			if (lightDepthValue < depthValue)
 			{
-				colour += calculateLighting(-directions[i].xyz, input.normal, diffuse[2]);
+				float3 lightVector = normalize(direction[2].xyz - input.worldPosition);
+				//colour += calculateLighting(-directions[i].xyz, input.normal, diffuse[2]);
+				colour += calculateLighting(lightVector, input.normal, diffuse[2]);
 				// Break out so multiple light values aren't given by one point light
 				lit = 1;
+				break;
 			}
 
 		}

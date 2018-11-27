@@ -41,6 +41,7 @@ public:
 
 private:
 	void initShader(WCHAR*, WCHAR*);
+	XMMATRIX YAxisViewMatrix(XMFLOAT3 direction, XMFLOAT3 position);
 
 private:
 	ID3D11Buffer* matrixBuffer;

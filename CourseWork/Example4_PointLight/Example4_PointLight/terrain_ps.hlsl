@@ -40,7 +40,7 @@ float4 main(InputType input) : SV_TARGET
 
     float depthValue;
     float lightDepthValue;
-    float shadowMapBias = 0.005f;
+    float shadowMapBias = 0.001f;
     float4 colour = float4(0.f, 0.f, 0.f, 1.f);
     float4 textureColour = texture0.Sample(Sampler0, input.tex);
     int lit = 0;

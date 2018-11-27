@@ -110,16 +110,14 @@ bool App1::render()
 	// Perform depth pass for light one and light2
 	//depthPass(light, shadowMap, 0);
 	depthPass(light2, shadowMap2);
-	
-	float low = 0.01f;
 
 	XMFLOAT3 directions[6] = {
-		XMFLOAT3(0.0f ,1, low),	// Up
-		XMFLOAT3(0.0f ,-1, low),	// Down
-		XMFLOAT3(1,-0.33f,0),	// Right
-		XMFLOAT3(-1,-0.33f,0),	// Left
-		XMFLOAT3(0,-0.33f,1),	// Fowards
-		XMFLOAT3(0,-0.33f,-1)	// Backwards
+		XMFLOAT3(0.0f ,1, 0.0f),	// Up
+		XMFLOAT3(0.0f , -1.0f, 0.0f),// Down
+		XMFLOAT3(1,0.0f,0),	// Right
+		XMFLOAT3(-1,0.0f,0),	// Left
+		XMFLOAT3(0,0.0f,1),	// Fowards
+		XMFLOAT3(0,0.0f,-1)	// Backwards
 	};
 
 
@@ -141,8 +139,27 @@ void App1::depthPass(Light* light_used, RenderTexture* texture_target)
 	texture_target->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 1.0f, 1.0f, 1.0f);
 
 	// get the world, view, and projection matrices from the camera and d3d objects.
-	light_used->generateViewMatrix();
-	XMMATRIX lightViewMatrix = light_used->getViewMatrix();
+
+	XMMATRIX lightViewMatrix;
+	if (light_used->getDirection().x == 0 && light_used->getDirection().z == 0) {
+
+		float dirY = light_used->getDirection().y;
+		dirY = (dirY > 0) ? 1 : -1;
+
+		XMFLOAT3 lightDirectionFloat3 = XMFLOAT3(0.0f, dirY, 0.0f);
+		XMFLOAT3 lightUpFloat3 = XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+		XMVECTOR lightPos = XMLoadFloat3(&light_used->getPosition());
+		XMVECTOR lightDirection = XMLoadFloat3(&lightDirectionFloat3);
+		XMVECTOR lightUp = XMLoadFloat3(&lightUpFloat3);
+
+		lightViewMatrix = XMMatrixLookToLH(lightPos, lightDirection, lightUp);
+
+	}
+	else {
+		light_used->generateViewMatrix();
+		lightViewMatrix = light_used->getViewMatrix();
+	}
 
 	XMMATRIX lightProjectionMatrix = light_used->getProjectionMatrix();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
@@ -265,7 +282,7 @@ void App1::finalPass()
 	XMMATRIX orthoViewMatrix = camera->getOrthoViewMatrix();	// Default camera position for orthographic rendering
 
 	orthoMesh->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowMap2->getShaderResourceView());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, shadowMaps[1]->getShaderResourceView());
 	textureShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 
 	orthoMesh2->sendData(renderer->getDeviceContext());
@@ -292,11 +309,11 @@ void App1::gui()
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 	ImGui::SliderFloat("Light Pos X: ", &lightPos.x, -10, 10);
 	ImGui::SliderFloat("Light Pos Y: ", &lightPos.y, 0, 10);
-	ImGui::SliderFloat("Light Pos Z: ", &lightPos.z, -15, 0);
+	ImGui::SliderFloat("Light Pos Z: ", &lightPos.z, -15, 15);
 
-	ImGui::SliderFloat("Light Dir X: ", &lightDir.x, -0.1f, 0.1f);
+	ImGui::SliderFloat("Light Dir X: ", &lightDir.x, -1.0f, 1.0f);
 	ImGui::SliderFloat("Light Dir Y: ", &lightDir.y, -1, 1);
-	ImGui::SliderFloat("Light Dir Z: ", &lightDir.z, -0.0f, 1.0f);
+	ImGui::SliderFloat("Light Dir Z: ", &lightDir.z, -1.0f, 1.0f);
 
 	// Render UI
 	ImGui::Render();

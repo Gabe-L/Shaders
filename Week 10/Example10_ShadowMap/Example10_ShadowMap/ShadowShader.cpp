@@ -93,6 +93,21 @@ void ShadowShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 
 }
 
+XMMATRIX ShadowShader::YAxisViewMatrix(XMFLOAT3 direction, XMFLOAT3 position)
+{
+	float dirY = direction.y;
+	dirY = (dirY > 0) ? 1 : -1;
+
+	XMFLOAT3 lightDirectionFloat3 = XMFLOAT3(0.0f, dirY, 0.0f);
+	XMFLOAT3 lightUpFloat3 = XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+	XMVECTOR lightPos = XMLoadFloat3(&position);
+	XMVECTOR lightDirection = XMLoadFloat3(&lightDirectionFloat3);
+	XMVECTOR lightUp = XMLoadFloat3(&lightUpFloat3);
+
+	return XMMatrixLookToLH(lightPos, lightDirection, lightUp);
+}
+
 
 void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView*depthMap, ID3D11ShaderResourceView*depthMap2, ID3D11ShaderResourceView*depthArray[6], Light* light, Light* light2, Light* pointLight)
 {
@@ -128,19 +143,28 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	dataPtr->lightProjection2 = tLightProjectionMatrix2;
 
 	XMFLOAT3 directions[6] = {
-		XMFLOAT3(0.001f,1,0),	// Up
-		XMFLOAT3(-0.0001f,-1,0),	// Down
-		XMFLOAT3(1,0,0),	// Right
-		XMFLOAT3(-1,0,0),	// Left
-		XMFLOAT3(0,0,1),	// Fowards
-		XMFLOAT3(0,0,-1)	// Backwards
+		XMFLOAT3(0.0f ,1, 0.0f),	// Up
+		XMFLOAT3(0.0f , -1.0f, 0.0f),	// Down
+		XMFLOAT3(1,0.0f,0),	// Right
+		XMFLOAT3(-1,0.0f,0),	// Left
+		XMFLOAT3(0,0.0f,1),	// Fowards
+		XMFLOAT3(0,0.0f,-1)	// Backwards
 	};
 
 	for (int i = 0; i < 6; i++) {
 
 		pointLight->setDirection(directions[i].x, directions[i].y, directions[i].z);
-		pointLight->generateViewMatrix();
-		XMMATRIX tLightViewMatrixPoint = XMMatrixTranspose(pointLight->getViewMatrix());
+		XMMATRIX viewMatrix;
+
+		if (pointLight->getDirection().x == 0 && pointLight->getDirection().z == 0) {
+			viewMatrix = YAxisViewMatrix(pointLight->getDirection(), pointLight->getPosition());
+		}
+		else {
+			pointLight->generateViewMatrix();
+			viewMatrix = pointLight->getViewMatrix();
+		}
+
+		XMMATRIX tLightViewMatrixPoint = XMMatrixTranspose(viewMatrix);
 		XMMATRIX tLightProjectionMatrixPoint = XMMatrixTranspose(pointLight->getProjectionMatrix());
 
 
@@ -183,9 +207,9 @@ void ShadowShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const
 	lightPtr->ambient[2] = pointLight->getAmbientColour();
 	lightPtr->diffuse[2] = pointLight->getDiffuseColour();
 
-	lightDir.x = pointLight->getDirection().x;
-	lightDir.y = pointLight->getDirection().y;
-	lightDir.z = pointLight->getDirection().z;
+	lightDir.x = pointLight->getPosition().x;
+	lightDir.y = pointLight->getPosition().y;
+	lightDir.z = pointLight->getPosition().z;
 	lightDir.w = 1.0f;
 
 	lightPtr->direction[2] = lightDir;

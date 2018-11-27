@@ -198,12 +198,12 @@ void App1::depthPass(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, RenderTextu
 
 RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 {
-	//defaultView->setRenderTarget(renderer->getDeviceContext());
+	// Multiple render targets (change output in pixel shader too)
 	/*ID3D11RenderTargetView* renderViews[2];
-	renderViews[0] = defaultView->getRenderTargetView();
+	renderViews[0] = targetTexture->getRenderTargetView();
 	renderViews[1] = cameraDepthTexture->getRenderTargetView();
-	renderer->getDeviceContext()->OMSetRenderTargets(2, renderViews, defaultView->getDepthStencilView());
-	defaultView->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
+	renderer->getDeviceContext()->OMSetRenderTargets(2, renderViews, targetTexture->getDepthStencilView());
+	targetTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
 	cameraDepthTexture->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
 	lightDepth->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 1.0f, 0.0f, 1.0f);*/
 
@@ -242,10 +242,19 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 
 	explosionTimer += timer->getTime();
 	
+	XMFLOAT3 lightFade;
+	if (explosionTimer < 1.0f) {
+		lightFade = XMFLOAT3(lightDiffuse.x * min(explosionTimer, 1.0f),
+			lightDiffuse.y * min(explosionTimer, 1.0f),
+			lightDiffuse.z * min(explosionTimer, 1.0f));
+	}
+	else {
+		lightFade = XMFLOAT3(lightDiffuse.x * min((3.0f - explosionTimer) / 2.0f, 1.0f),
+			lightDiffuse.y * min((3.0f - explosionTimer) / 2.0f, 1.0f),
+			lightDiffuse.z * min((3.0f - explosionTimer) / 2.0f, 1.0f));
+	}
 
-	XMFLOAT3 lightFade = XMFLOAT3(	lightDiffuse.x/* * min(explosionTimer, 1.0f)*/,
-									lightDiffuse.y/* * min(explosionTimer, 1.0f)*/,
-									lightDiffuse.z/* * min(explosionTimer, 1.0f)*/);
+	lightFade = XMFLOAT3(lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
 
 	light->setDiffuseColour(lightFade.x, lightFade.y, lightFade.z, 1.0f);
 	

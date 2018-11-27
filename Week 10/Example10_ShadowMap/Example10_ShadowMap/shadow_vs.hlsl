@@ -26,7 +26,8 @@ struct OutputType
 	float3 normal : NORMAL;
     float4 lightViewPos : TEXCOORD1;
     float4 lightViewPos2 : TEXCOORD2;
-	float4 lightViewsPos[6] : TEXCOORD3;
+	float3 worldPosition : TEXCOORD3;
+	float4 lightViewsPos[6] : TEXCOORD4;
 };
 
 
@@ -36,6 +37,7 @@ OutputType main(InputType input)
 
 	// Calculate the position of the vertex against the world, view, and projection matrices.
     output.position = mul(input.position, worldMatrix);
+    output.worldPosition = mul(input.position, worldMatrix);
     output.position = mul(output.position, viewMatrix);
     output.position = mul(output.position, projectionMatrix);
     

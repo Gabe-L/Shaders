@@ -31,11 +31,6 @@ float4 main(InputType input) : SV_TARGET
     float depthVal = depthTexture.Sample(Sampler0, input.tex).r;
     depthVal = 1.0f - depthVal;
 
-    if (depthVal == 0.0f)
-    {
-        return blurColor;
-    }
-
     float Dist = depthTexture.Sample(Sampler0, float2(0.5f, 0.5f)).r;
 
     Dist = 1.0f - Dist;
@@ -50,12 +45,9 @@ float4 main(InputType input) : SV_TARGET
     Dz /= Dist * -far;
 
     float blurVal = saturate(abs(Dz - depthVal) / Range);
-	//return float4(depthVal, depthVal, depthVal, 1.0f);
 
 	// Get difference between current fragment and focal distance, divide by range for 
     float diff = abs((depthVal - Dist) / Range);
-	//diff /= Range;
-	//diff /= Far;
     diff = saturate(diff);
     float4 returnColor = lerp(normalColor, blurColor, diff);
     return returnColor;
