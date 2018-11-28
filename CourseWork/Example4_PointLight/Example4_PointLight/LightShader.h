@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DXF.h"
+#include "Explosion.h"
 
 using namespace std;
 using namespace DirectX;
@@ -14,8 +15,8 @@ private:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX projection;
-		XMMATRIX lightView;
-		XMMATRIX lightProjection;
+		XMMATRIX explosionLightProjections;
+		XMMATRIX explosionLightViews[6];
 	};
 
 	struct LightBufferType
@@ -23,15 +24,14 @@ private:
 		XMFLOAT4 ambient;
 		XMFLOAT4 diffuse;
 		XMFLOAT4 direction;
-		XMFLOAT3 position;
-		float padding;
+		XMFLOAT4 position;
 	};
 
 public:
 	LightShader(ID3D11Device* device, HWND hwnd);
 	~LightShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* depthTex, Light* light);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, Explosion* explosion);
 
 private:
 	void initShader(WCHAR*, WCHAR*);

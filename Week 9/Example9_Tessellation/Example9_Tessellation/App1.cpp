@@ -15,12 +15,12 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	// Create Mesh object and shader object
 	//mesh = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext(), 1);
 	
-	mesh = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext(), 10, 10);
+	mesh = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext(), 25, 10);
 	plane = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext());
 
 	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	textureMgr->loadTexture("grass", L"res/ramp_grass.png");
-	textureMgr->loadTexture("height", L"res/cratertest.png");
+	textureMgr->loadTexture("height", L"res/height2.png");
 
 	shader = new TessellationShader(renderer->getDevice(), hwnd);
 	grassShader = new GrassShader(renderer->getDevice(), hwnd);

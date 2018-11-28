@@ -97,7 +97,7 @@ void LightShader::initShader(WCHAR* vsFilename, WCHAR* psFilename)
 }
 
 
-void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* depthTex, Light* light)
+void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, Explosion* explosion)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -111,17 +111,21 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	tview = XMMatrixTranspose(viewMatrix);
 	tproj = XMMatrixTranspose(projectionMatrix);
 
-	XMMATRIX tLightViewMatrix = XMMatrixTranspose(light->getViewMatrix());
-	XMMATRIX tLightProjectionMatrix = XMMatrixTranspose(light->getProjectionMatrix());
-
 	result = deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
+
+	// Camera view info
 	dataPtr->world = tworld;// worldMatrix;
 	dataPtr->view = tview;
 	dataPtr->projection = tproj;
 
-	dataPtr->lightView = tLightViewMatrix;
-	dataPtr->lightProjection = tLightProjectionMatrix;
+	// Explosion light view info
+
+	dataPtr->explosionLightProjections = XMMatrixTranspose(explosion->getLight()->getProjectionMatrix());
+
+	for (int i = 0; i < 6; i++) {
+		dataPtr->explosionLightViews[i] = XMMatrixTranspose(explosion->GenerateView(i));
+	}
 
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
@@ -129,22 +133,25 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	//Additional
 	// Send light data to pixel shader
 
-	XMFLOAT4 direction = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0.0f);
+	XMFLOAT4 direction = XMFLOAT4(explosion->getLight()->getDirection().x, explosion->getLight()->getDirection().y, explosion->getLight()->getDirection().z, 1.0f);
+
+	XMFLOAT4 position = XMFLOAT4(explosion->getLight()->getPosition().x, explosion->getLight()->getPosition().y, explosion->getLight()->getPosition().z, 1.0f);
 
 	LightBufferType* lightPtr;
 	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	lightPtr = (LightBufferType*)mappedResource.pData;
-	lightPtr->ambient = light->getAmbientColour();
-	lightPtr->diffuse = light->getDiffuseColour();
+
+	lightPtr->ambient = explosion->getLight()->getAmbientColour();
+	lightPtr->diffuse = explosion->getLight()->getDiffuseColour();
 	lightPtr->direction = direction;
-	lightPtr->position = light->getPosition();
-	lightPtr->padding = 0.0f;
+	lightPtr->position = position;
+	
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);
-	deviceContext->PSSetShaderResources(1, 1, &depthTex);
+	deviceContext->PSSetShaderResources(1, 6, explosion->getDepthResources().data());
 
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);

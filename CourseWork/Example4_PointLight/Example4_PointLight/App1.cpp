@@ -10,7 +10,6 @@ App1::App1()
 	textureShader = nullptr;
 	cameraDepthTexture = nullptr;
 	depthShader = nullptr;
-	lightDepth = nullptr;
 	cubeMesh = nullptr;
 	shadowShader = nullptr;
 }
@@ -41,19 +40,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	depthShader = new DepthShader(renderer->getDevice(), hwnd);
 	cameraDepthTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 
-	light = new Light;
-	light->setAmbientColour(0.1f, 0.1f, 0.1f, 1.0f);
-	light->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
-	lightDiffuse = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	light->setPosition(55.f, 6.0f, 53.f);
-	lightPos = XMFLOAT3(55.f, 6.0f, 53.f);
-	light->setDirection(0.0f, -0.7f, 0.7f);
-
-	light->generateProjectionMatrix(0.1f, 100.0f);
-	//light->generateOrthoMatrix(screenWidth, screenHeight, 1.0f, 100.0f);
-	
-	lightDepth = new RenderTexture(renderer->getDevice(), 4096, 4096, 0.1f, 100.0f);
-
 	shadowShader = new ShadowShader(renderer->getDevice(), hwnd);
 	lightShader = new LightShader(renderer->getDevice(), hwnd);
 
@@ -65,14 +51,14 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	// Test cube
 	cubeMesh = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
+	testPlane = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext());
 	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	camera->setPosition(55.f, 6.0f, 55.f);
 
 	// Explosion
 	explosionShader = new ExplosionShader(renderer->getDevice(), hwnd);
-	explosionSphere = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext(), 100);
+	explosion = new Explosion(renderer->getDevice(), renderer->getDeviceContext(), hwnd, explosionShader, depthShader);
 	timeTrack = 0.0f;
-	explosionTimer = 0.0f;
 
 	// Depth of Field / Blur
 	blurShader = new BlurShader(renderer->getDevice(), hwnd);
@@ -119,11 +105,6 @@ App1::~App1()
 	if (depthShader) {
 		delete depthShader;
 		depthShader = 0;
-	}
-
-	if (lightDepth) {
-		delete lightDepth;
-		lightDepth = 0;
 	}
 
 	if (cubeMesh) {
@@ -175,21 +156,19 @@ void App1::depthPass(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, RenderTextu
 	//depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
 	//depthShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
+	// Render test plane
+	testPlane->sendData(renderer->getDeviceContext());
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
+	depthShader->render(renderer->getDeviceContext(), testPlane->getIndexCount());
+
 	// Render test cube
 	worldMatrix = XMMatrixTranslation(55.f, 3.0f, 57.f);
 	cubeMesh->sendData(renderer->getDeviceContext());
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
 	depthShader->render(renderer->getDeviceContext(), cubeMesh->getIndexCount());
 
-	if (explosionTimer < 2.0f)
-	{
-		// Render explosion
-		worldMatrix = XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z);
-
-		explosionSphere->sendData(renderer->getDeviceContext());
-		depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
-		depthShader->render(renderer->getDeviceContext(), explosionSphere->getIndexCount());
-	}
+	// Render Explosion
+	explosion->RenderDepth(viewMatrix, projectionMatrix);
 
 	// Set back buffer as render target and reset view port.
 	renderer->setBackBufferRenderTarget();
@@ -227,44 +206,26 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 
 	// Render terrain
 	terrain->sendData(renderer->getDeviceContext());
-	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), lightDepth->getShaderResourceView(), tessFactor, camera->getPosition(), light, timeTrack);
-	terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
+	//terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), lightDepth->getShaderResourceView(), tessFactor, camera->getPosition(), light, timeTrack);
+	//terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
+
+	// Render test plane
+	testPlane->sendData(renderer->getDeviceContext());
+	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), explosion);
+	lightShader->render(renderer->getDeviceContext(), testPlane->getIndexCount());
 
 	// Render test cube
 	worldMatrix = XMMatrixTranslation(55.f, 3.0f, 57.f);
 
 	cubeMesh->sendData(renderer->getDeviceContext());
-	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), lightDepth->getShaderResourceView(), light);
+	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), explosion);
 	lightShader->render(renderer->getDeviceContext(), cubeMesh->getIndexCount());
 
 	// Render explosion
 	worldMatrix = XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z);
 
-	explosionTimer += timer->getTime();
-	
-	XMFLOAT3 lightFade;
-	if (explosionTimer < 1.0f) {
-		lightFade = XMFLOAT3(lightDiffuse.x * min(explosionTimer, 1.0f),
-			lightDiffuse.y * min(explosionTimer, 1.0f),
-			lightDiffuse.z * min(explosionTimer, 1.0f));
-	}
-	else {
-		lightFade = XMFLOAT3(lightDiffuse.x * min((3.0f - explosionTimer) / 2.0f, 1.0f),
-			lightDiffuse.y * min((3.0f - explosionTimer) / 2.0f, 1.0f),
-			lightDiffuse.z * min((3.0f - explosionTimer) / 2.0f, 1.0f));
-	}
-
-	lightFade = XMFLOAT3(lightDiffuse.x, lightDiffuse.y, lightDiffuse.z);
-
-	light->setDiffuseColour(lightFade.x, lightFade.y, lightFade.z, 1.0f);
-	
-	if (explosionTimer > 3.0f) {
-		explosionTimer = 0.0f;
-	}
-
-	explosionSphere->sendData(renderer->getDeviceContext());
-	explosionShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("compose"), textureMgr->getTexture("burn"), timeTrack, explosionTimer);
-	explosionShader->render(renderer->getDeviceContext(), explosionSphere->getIndexCount());
+	explosion->Update(timer->getTime());
+	explosion->Render(viewMatrix, projectionMatrix, textureMgr->getTexture("compose"), textureMgr->getTexture("burn"), timeTrack);
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
 	renderer->setBackBufferRenderTarget();
@@ -374,8 +335,10 @@ void App1::FinalPass(RenderTexture* inputTexture)
 bool App1::render()
 {
 	// Gather depth info from lights
-	light->generateViewMatrix();
-	depthPass(light->getViewMatrix(), light->getProjectionMatrix(), lightDepth);
+	for (int i = 0; i < 6; i++) {
+		depthPass(explosion->GenerateView(i), explosion->getLight()->getProjectionMatrix(), explosion->getShadowMap(i));
+	}
+
 	depthPass(camera->getViewMatrix(), renderer->getProjectionMatrix(), cameraDepth);
 
 	RenderTexture* currentTexture;
@@ -386,8 +349,12 @@ bool App1::render()
 	currentTexture = DoFPass(currentTexture);
 
 	// Pass in texture to be rendered to screen. Debug texture can be used here
-	FinalPass(currentTexture);
-
+	if (testRender) {
+		FinalPass(explosion->shadowMaps[4]);
+	}
+	else {
+		FinalPass(currentTexture);
+	}
 	return true;
 }
 
@@ -406,11 +373,11 @@ void App1::gui()
 
 	ImGui::SliderInt("Tessellation Factor: ", &tessFactor, 1, 64);
 
-	ImGui::SliderFloat("Light X: ", &lightPos.x, 0.0f, 100.0f);
-	ImGui::SliderFloat("Light Y: ", &lightPos.y, 0.0f, 10.0f);
-	ImGui::SliderFloat("Light Z: ", &lightPos.z, 0.0f, 100.0f);
+	ImGui::SliderFloat("Light X: ", &explosion->worldPosition.x, 40, 60.0f);
+	ImGui::SliderFloat("Light Y: ", &explosion->worldPosition.y, 0.0f, 10.0f);
+	ImGui::SliderFloat("Light Z: ", &explosion->worldPosition.z, 40.f, 60.0f);
 
-	light->setPosition(lightPos.x, lightPos.y, lightPos.z);
+	ImGui::Checkbox("Render Test", &testRender);
 
 	// Render UI
 	ImGui::Render();

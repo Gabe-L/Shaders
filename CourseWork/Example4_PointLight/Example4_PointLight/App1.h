@@ -16,6 +16,7 @@
 #include "OrthoMesh.h"
 #include "CubeMesh.h"
 #include "SphereMesh.h"
+#include "Explosion.h"
 
 class App1 : public BaseApplication
 {
@@ -56,8 +57,6 @@ private:
 	DepthShader* depthShader;
 
 	// Lighting
-	Light* light;
-	RenderTexture* lightDepth;
 	ShadowShader* shadowShader;
 	LightShader* lightShader;
 
@@ -66,10 +65,8 @@ private:
 	XMFLOAT3 lightPos;
 
 	// Explosion
+	Explosion* explosion;
 	ExplosionShader* explosionShader;
-	XMFLOAT3 lightDiffuse;
-	SphereMesh* explosionSphere;
-	float explosionTimer;
 	float timeTrack;
 
 	// Depth of Field / Blur
@@ -82,7 +79,8 @@ private:
 
 	// Testing purposes
 	RenderTexture* debugTexture;
-
+	PlaneMesh* testPlane;
+	bool testRender = false;
 };
 
 #endif

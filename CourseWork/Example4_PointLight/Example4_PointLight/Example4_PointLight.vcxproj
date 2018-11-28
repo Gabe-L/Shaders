@@ -130,6 +130,7 @@
     <ClCompile Include="BlurShader.cpp" />
     <ClCompile Include="DepthShader.cpp" />
     <ClCompile Include="DoFShader.cpp" />
+    <ClCompile Include="Explosion.cpp" />
     <ClCompile Include="ExplosionShader.cpp" />
     <ClCompile Include="LightShader.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="BlurShader.h" />
     <ClInclude Include="DepthShader.h" />
     <ClInclude Include="DoFShader.h" />
+    <ClInclude Include="Explosion.h" />
     <ClInclude Include="ExplosionShader.h" />
     <ClInclude Include="LightShader.h" />
     <ClInclude Include="ShadowShader.h" />
