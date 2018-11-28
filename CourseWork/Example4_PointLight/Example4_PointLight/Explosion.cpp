@@ -2,7 +2,7 @@
 
 
 
-Explosion::Explosion(ID3D11Device* _device, ID3D11DeviceContext* _deviceContext, HWND hwnd, ExplosionShader* _explosionShader, DepthShader* _depthShader) : explosionTimer(0.0f), device(_device), deviceContext(_deviceContext), explosionShader(_explosionShader), depthShader(_depthShader), shadowMapWidth(4096), shadowMapHeight(4096)
+Explosion::Explosion(int _terrainDimensions, ID3D11Device* _device, ID3D11DeviceContext* _deviceContext, HWND hwnd, ExplosionShader* _explosionShader, DepthShader* _depthShader) : terrainDimensions(_terrainDimensions), explosionTimer(0.0f), device(_device), deviceContext(_deviceContext), explosionShader(_explosionShader), depthShader(_depthShader), shadowMapWidth(4096), shadowMapHeight(4096)
 {
 	explosionSphere = new SphereMesh(device, deviceContext, 100);
 
@@ -61,6 +61,13 @@ void Explosion::Update(float deltaTime)
 
 	if (explosionTimer > 3.0f) {
 		explosionTimer = 0.0f;
+
+		float xRand = 10 + (std::rand() % ((terrainDimensions - 10) - 10 + 1));
+		float zRand = 10 + (std::rand() % ((terrainDimensions - 10) - 10 + 1));
+		float yRand = 20 + (std::rand() % (30 - 20 + 1));
+
+
+		worldPosition = XMFLOAT3(xRand, yRand, zRand);
 	}
 }
 
@@ -70,12 +77,14 @@ void Explosion::Render(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11Sha
 
 	XMFLOAT3 lightFade;
 	if (explosionTimer < 1.0f) {
+		// Fade in
 		lightFade = XMFLOAT3(
 			startDiffuse.x * min(explosionTimer, 1.0f),
 			startDiffuse.y * min(explosionTimer, 1.0f),
 			startDiffuse.z * min(explosionTimer, 1.0f));
 	}
 	else {
+		// Fade out
 		lightFade = XMFLOAT3(
 			startDiffuse.x * min((3.0f - explosionTimer) / 2.0f, 1.0f),
 			startDiffuse.y * min((3.0f - explosionTimer) / 2.0f, 1.0f),

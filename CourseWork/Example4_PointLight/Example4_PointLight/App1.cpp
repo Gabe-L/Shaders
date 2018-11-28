@@ -21,14 +21,20 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	// Load textures
 	textureMgr->loadTexture("grass", L"res/ramp_grass.png");
-	textureMgr->loadTexture("height", L"res/cratertest.png");
+	textureMgr->loadTexture("height", L"res/height2.png");
 	textureMgr->loadTexture("mud", L"res/mud.jpg");
 	textureMgr->loadTexture("compose", L"res/smoke-compose.png");
 	textureMgr->loadTexture("burn", L"res/burn.png");
 
 	// Create Mesh object and shader object for terrain
-	terrain = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext(), 10, 15);
+	int terrainScale = 25;
+	int terrainPatchSize = 10;
+	terrainDimensions = terrainScale * terrainPatchSize;
+
+	terrain = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext(), terrainScale, terrainPatchSize);
 	terrainShader = new TerrainShader(renderer->getDevice(), hwnd);
+
+	windPos = XMFLOAT3(terrainDimensions, 20.0f, terrainDimensions);
 
 	// Creating mesh and shader objects for post processing
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);
@@ -57,7 +63,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	// Explosion
 	explosionShader = new ExplosionShader(renderer->getDevice(), hwnd);
-	explosion = new Explosion(renderer->getDevice(), renderer->getDeviceContext(), hwnd, explosionShader, depthShader);
+	explosion = new Explosion(terrainDimensions, renderer->getDevice(), renderer->getDeviceContext(), hwnd, explosionShader, depthShader);
 	timeTrack = 0.0f;
 
 	// Depth of Field / Blur
@@ -205,9 +211,15 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 	timeTrack += timer->getTime();
 
 	// Render terrain
+	windPos.x += timer->getTime();
+	windPos.z += timer->getTime();
+
+	if (windPos.x > terrainDimensions) { windPos.x = 0.0f; }
+	if (windPos.z > terrainDimensions) { windPos.z = 0.0f; }
+
 	terrain->sendData(renderer->getDeviceContext());
-	//terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), lightDepth->getShaderResourceView(), tessFactor, camera->getPosition(), light, timeTrack);
-	//terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
+	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion,tessFactor, camera->getPosition(), timeTrack, windPos);
+	terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
 	// Render test plane
 	testPlane->sendData(renderer->getDeviceContext());
@@ -373,9 +385,9 @@ void App1::gui()
 
 	ImGui::SliderInt("Tessellation Factor: ", &tessFactor, 1, 64);
 
-	ImGui::SliderFloat("Light X: ", &explosion->worldPosition.x, 40, 60.0f);
-	ImGui::SliderFloat("Light Y: ", &explosion->worldPosition.y, 0.0f, 10.0f);
-	ImGui::SliderFloat("Light Z: ", &explosion->worldPosition.z, 40.f, 60.0f);
+	ImGui::SliderFloat("Light X: ", &windPos.x, 40, 60.0f);
+	ImGui::SliderFloat("Light Y: ", &windPos.y, 0.0f, 10.0f);
+	ImGui::SliderFloat("Light Z: ", &windPos.z, 40.f, 60.0f);
 
 	ImGui::Checkbox("Render Test", &testRender);
 

@@ -45,6 +45,7 @@ private:
 	// Terrain
 	TessellatedPlane* terrain;
 	TerrainShader* terrainShader;
+	XMFLOAT3 windPos;
 	int tessFactor;
 	
 	// Post processing
@@ -78,6 +79,7 @@ private:
 	RenderTexture* DoFTexture;
 
 	// Testing purposes
+	int terrainDimensions;
 	RenderTexture* debugTexture;
 	PlaneMesh* testPlane;
 	bool testRender = false;

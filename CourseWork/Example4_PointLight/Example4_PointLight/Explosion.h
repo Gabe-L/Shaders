@@ -7,7 +7,7 @@
 class Explosion
 {
 public:
-	Explosion(ID3D11Device* _device, ID3D11DeviceContext* _deviceContext, HWND hwnd, ExplosionShader* _explosionShader, DepthShader* _depthShader);
+	Explosion(int _terrainDimensions, ID3D11Device* _device, ID3D11DeviceContext* _deviceContext, HWND hwnd, ExplosionShader* _explosionShader, DepthShader* _depthShader);
 	~Explosion();
 
 	void Update(float deltaTime);
@@ -23,6 +23,7 @@ public:
 
 private:
 	int shadowMapWidth, shadowMapHeight;
+	int terrainDimensions;
 
 	SphereMesh* explosionSphere;
 	ExplosionShader* explosionShader;

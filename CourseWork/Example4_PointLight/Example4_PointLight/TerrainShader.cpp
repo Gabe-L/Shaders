@@ -145,7 +145,7 @@ XMFLOAT4 float3_to_float4(XMFLOAT3 input, float w_val = 0.f) //converts a float3
 	return XMFLOAT4(input.x, input.y, input.z, w_val);
 }
 
-void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, ID3D11ShaderResourceView* lightDepth, float tesselationFactor, XMFLOAT3 cameraPosition, Light* light, float time)
+void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, Explosion* explosion, float tesselationFactor, XMFLOAT3 cameraPosition, float time, XMFLOAT3 windPos)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -155,9 +155,6 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 	XMMATRIX tview = XMMatrixTranspose(viewMatrix);
 	XMMATRIX tproj = XMMatrixTranspose(projectionMatrix);
 
-	XMMATRIX tLightViewMatrix = XMMatrixTranspose(light->getViewMatrix());
-	XMMATRIX tLightProjectionMatrix = XMMatrixTranspose(light->getProjectionMatrix());
-
 	// Lock the constant buffer so it can be written to.
 	result = deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	MatrixBufferType* dataPtr = (MatrixBufferType*)mappedResource.pData;
@@ -165,9 +162,10 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 	dataPtr->view = tview;
 	dataPtr->projection = tproj;
 
-	// Light view one
-	dataPtr->lightView = tLightViewMatrix;
-	dataPtr->lightProjection = tLightProjectionMatrix;
+	// Explosion light view info
+	for (int i = 0; i < 6; i++) {
+		dataPtr->explosionLightViews[i] = XMMatrixTranspose(explosion->GenerateView(i));
+	}
 
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->GSSetConstantBuffers(0, 1, &matrixBuffer);
@@ -178,10 +176,10 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	lightPtr = (LightBufferType*)mappedResource.pData;
 
-	lightPtr->ambient = light->getAmbientColour();
-	lightPtr->diffuse = light->getDiffuseColour();
-	lightPtr->direction = float3_to_float4(light->getDirection());
-	lightPtr->position = float3_to_float4(light->getPosition());
+	lightPtr->ambient = explosion->getLight()->getAmbientColour();
+	lightPtr->diffuse = explosion->getLight()->getDiffuseColour();
+	lightPtr->direction = float3_to_float4(explosion->getLight()->getDirection());
+	lightPtr->position = float3_to_float4(explosion->getLight()->getPosition());
 
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
@@ -201,7 +199,7 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 
 	camPtr->camPos = float3_to_float4(cameraPosition);
 	camPtr->time = time;
-	camPtr->padding = XMFLOAT3(0, 0, 0);
+	camPtr->windPos = windPos;
 
 	deviceContext->Unmap(camBuffer, 0);
 	deviceContext->GSSetConstantBuffers(1, 1, &camBuffer);
@@ -209,7 +207,7 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &mudTexture);
 	deviceContext->PSSetShaderResources(1, 1, &grassTexture);
-	deviceContext->PSSetShaderResources(2, 1, &lightDepth);
+	deviceContext->PSSetShaderResources(2, 6, explosion->getDepthResources().data());
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
 	deviceContext->DSSetShaderResources(0, 1, &heightTexture);

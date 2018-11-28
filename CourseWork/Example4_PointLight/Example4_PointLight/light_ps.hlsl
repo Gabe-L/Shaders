@@ -2,7 +2,7 @@
 // Calculate diffuse lighting for a single directional light (also texturing)
 
 Texture2D texture0 : register(t0);
-Texture2D explopsionShadows[6] : register (t2);
+Texture2D explopsionShadows[6] : register (t1);
 
 SamplerState sampler0 : register(s0);
 SamplerState shadowSampler : register(s1);
@@ -36,7 +36,7 @@ float4 main(InputType input) : SV_TARGET
 {
     float depthValue;
     float lightDepthValue;
-    float shadowMapBias = 0.005f;
+    float shadowMapBias = 0.001f;
     float4 colour = float4(0.f, 0.f, 0.f, 1.f);
     float4 textureColour = texture0.Sample(sampler0, input.tex);
     int lit = 0;

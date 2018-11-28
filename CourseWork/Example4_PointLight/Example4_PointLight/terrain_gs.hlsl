@@ -4,15 +4,15 @@ cbuffer MatrixBuffer : register(b0)
     matrix worldMatrix;
     matrix viewMatrix;
     matrix projectionMatrix;
-    matrix lightViewMatrix;
-    matrix lightProjectionMatrix;
+    matrix explosionProjectionMatrix;
+    matrix explosionViewMatrices[6];
 };
 
 cbuffer CamBuffer : register(b1)
 {
     float4 camPos;
     float time;
-    float3 padding;
+    float3 windPos;
 }
 
 cbuffer TexCoordBuffer
@@ -37,11 +37,11 @@ struct OutputType
     float4 position : SV_POSITION;
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
-    float4 worldPosition : TEXCOORD1;
-    float4 lightViewPos : TEXCOORD2;
+    float4 worldPosition : TEXCOORD1; // W component used to determine which texture to use
+    float4 explosionViewPos[6] : TEXCOORD2;
 };
 
-[maxvertexcount(3)]
+[maxvertexcount(6)]
 void main(triangle InputType input[3], inout TriangleStream<OutputType> triStream)
 {
     OutputType output;
@@ -51,11 +51,14 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
     output.position = mul(input[0].position, worldMatrix);
     output.position = mul(output.position, viewMatrix);
     output.position = mul(output.position, projectionMatrix);
-    
+
     // Calculate the position of the vertice as viewed by the light source.
-    output.lightViewPos = mul(input[0].position, worldMatrix);
-    output.lightViewPos = mul(output.lightViewPos, lightViewMatrix);
-    output.lightViewPos = mul(output.lightViewPos, lightProjectionMatrix);
+    for (int i = 0; i < 6; i++)
+    {
+        output.explosionViewPos[i] = mul(input[0].position, worldMatrix);
+        output.explosionViewPos[i] = mul(output.explosionViewPos[i], explosionViewMatrices[i]);
+        output.explosionViewPos[i] = mul(output.explosionViewPos[i], explosionProjectionMatrix);
+    }
 
     output.tex = input[0].tex;
     output.normal = input[0].normal;
@@ -67,9 +70,12 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
     output.position = mul(output.position, projectionMatrix);
     
     // Calculate the position of the vertice as viewed by the light source.
-    output.lightViewPos = mul(input[1].position, worldMatrix);
-    output.lightViewPos = mul(output.lightViewPos, lightViewMatrix);
-    output.lightViewPos = mul(output.lightViewPos, lightProjectionMatrix);
+    for (int j = 0; j < 6; j++)
+    {
+        output.explosionViewPos[j] = mul(input[1].position, worldMatrix);
+        output.explosionViewPos[j] = mul(output.explosionViewPos[j], explosionViewMatrices[j]);
+        output.explosionViewPos[j] = mul(output.explosionViewPos[j], explosionProjectionMatrix);
+    }
     
     output.tex = input[1].tex;
     output.normal = input[1].normal;
@@ -81,9 +87,12 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
     output.position = mul(output.position, projectionMatrix);
     
     // Calculate the position of the vertice as viewed by the light source.
-    output.lightViewPos = mul(input[2].position, worldMatrix);
-    output.lightViewPos = mul(output.lightViewPos, lightViewMatrix);
-    output.lightViewPos = mul(output.lightViewPos, lightProjectionMatrix);
+    for (int i = 0; i < 6; i++)
+    {
+        output.explosionViewPos[i] = mul(input[2].position, worldMatrix);
+        output.explosionViewPos[i] = mul(output.explosionViewPos[i], explosionViewMatrices[i]);
+        output.explosionViewPos[i] = mul(output.explosionViewPos[i], explosionProjectionMatrix);
+    }
 
     output.tex = input[2].tex;
     output.normal = input[2].normal;
@@ -101,10 +110,24 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
     right *= 0.1f;
     up *= 0.5f;
 
+    float3 windVec = normalize(windPos - input[0].position.xyz);
+    float distanceToWind = sqrt(pow(windPos.x - input[0].position.x, 2) + pow(windPos.y - input[0].position.y, 2));
+
+    // Only keep distance value between 0 and 10
+    distanceToWind -= 10.0f;
+    distanceToWind = min(distanceToWind, 0.0f);
+    distanceToWind *= -1.0f;
+    distanceToWind /= 10.0f;
+
     float3 vertPos[3];
     vertPos[0] = input[0].position.xyz - (right / 2);
     vertPos[1] = input[0].position.xyz + (right / 2);
-    vertPos[2] = (up * 2.0f) + input[0].position.xyz + sin(input[0].position.z * input[0].position.x + time);
+    //vertPos[2] = (up * 2.0f) + input[0].position.xyz + sin(input[0].position.z * input[0].position.x + time);
+    float vertY;
+    vertPos[2] = (up * 2.0f) + input[0].position.xyz;
+    vertY = vertPos[2].y;
+    vertPos[2] += distanceToWind * -windVec;
+    //vertPos[2].y = vertY;
 
     for (int i = 0; i < 3; i++)
     {
@@ -114,8 +137,7 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
         output.position = mul(output.position, viewMatrix);
         output.position = mul(output.position, projectionMatrix);
         output.tex = texCoords[i];
-        float3 tempNormal = input[0].normal;
-        output.normal = input[0].normal;
+        output.normal = forward;
         triStream.Append(output);
     }
 

@@ -1,6 +1,8 @@
 #pragma once
 
+
 #include "DXF.h"
+#include "Explosion.h"
 
 using namespace std;
 using namespace DirectX;
@@ -15,8 +17,8 @@ private:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX projection;
-		XMMATRIX lightView;
-		XMMATRIX lightProjection;
+		XMMATRIX explosionLightProjections;
+		XMMATRIX explosionLightViews[6];
 	};
 
 	struct TessellationBufferType
@@ -37,7 +39,7 @@ private:
 	{
 		XMFLOAT4 camPos;
 		float time;
-		XMFLOAT3 padding;
+		XMFLOAT3 windPos;
 	};
 
 public:
@@ -45,7 +47,7 @@ public:
 	TerrainShader(ID3D11Device* device, HWND hwnd);
 	~TerrainShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, ID3D11ShaderResourceView* lightDepth, float tesselationFactor, XMFLOAT3 cameraPosition, Light* light, float time);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, Explosion* explosion, float tesselationFactor, XMFLOAT3 cameraPosition, float time, XMFLOAT3 windPos);
 
 private:
 	void initShader(WCHAR* vsFilename, WCHAR* psFilename);
