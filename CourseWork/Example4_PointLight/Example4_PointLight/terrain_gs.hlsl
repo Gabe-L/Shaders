@@ -38,7 +38,8 @@ struct OutputType
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
     float4 worldPosition : TEXCOORD1; // W component used to determine which texture to use
-    float4 explosionViewPos[6] : TEXCOORD2;
+    float4 depthPosition : TEXCOORD2;
+    float4 explosionViewPos[6] : TEXCOORD3;
 };
 
 [maxvertexcount(6)]
@@ -47,56 +48,29 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
     OutputType output;
 
 	// Append plane tri
-    output.worldPosition = float4(mul(input[0].position, worldMatrix).xyz, 1.0f);
-    output.position = mul(input[0].position, worldMatrix);
-    output.position = mul(output.position, viewMatrix);
-    output.position = mul(output.position, projectionMatrix);
+    float3 vertexNormal = normalize(cross(input[0].position.xyz - input[1].position.xyz, input[0].position.xyz - input[2].position.xyz));
 
-    // Calculate the position of the vertice as viewed by the light source.
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 3; i++)
     {
-        output.explosionViewPos[i] = mul(input[0].position, worldMatrix);
-        output.explosionViewPos[i] = mul(output.explosionViewPos[i], explosionViewMatrices[i]);
-        output.explosionViewPos[i] = mul(output.explosionViewPos[i], explosionProjectionMatrix);
-    }
+        output.worldPosition = float4(mul(input[i].position, worldMatrix).xyz, 1.0f);
+        output.position = mul(input[i].position, worldMatrix);
+        output.position = mul(output.position, viewMatrix);
+        output.position = mul(output.position, projectionMatrix);
 
-    output.tex = input[0].tex;
-    output.normal = input[0].normal;
-    triStream.Append(output);
-	
-    output.worldPosition = float4(mul(input[1].position, worldMatrix).xyz, 1.0f);
-    output.position = mul(input[1].position, worldMatrix);
-    output.position = mul(output.position, viewMatrix);
-    output.position = mul(output.position, projectionMatrix);
-    
-    // Calculate the position of the vertice as viewed by the light source.
-    for (int j = 0; j < 6; j++)
-    {
-        output.explosionViewPos[j] = mul(input[1].position, worldMatrix);
-        output.explosionViewPos[j] = mul(output.explosionViewPos[j], explosionViewMatrices[j]);
-        output.explosionViewPos[j] = mul(output.explosionViewPos[j], explosionProjectionMatrix);
-    }
-    
-    output.tex = input[1].tex;
-    output.normal = input[1].normal;
-    triStream.Append(output);
+        output.depthPosition = output.position;
 
-    output.worldPosition = float4(mul(input[2].position, worldMatrix).xyz, 1.0f);
-    output.position = mul(input[2].position, worldMatrix);
-    output.position = mul(output.position, viewMatrix);
-    output.position = mul(output.position, projectionMatrix);
-    
-    // Calculate the position of the vertice as viewed by the light source.
-    for (int i = 0; i < 6; i++)
-    {
-        output.explosionViewPos[i] = mul(input[2].position, worldMatrix);
-        output.explosionViewPos[i] = mul(output.explosionViewPos[i], explosionViewMatrices[i]);
-        output.explosionViewPos[i] = mul(output.explosionViewPos[i], explosionProjectionMatrix);
-    }
+         // Calculate the position of the vertice as viewed by the light source.
+        for (int j = 0; j < 6; j++)
+        {
+            output.explosionViewPos[j] = mul(input[i].position, worldMatrix);
+            output.explosionViewPos[j] = mul(output.explosionViewPos[j], explosionViewMatrices[j]);
+            output.explosionViewPos[j] = mul(output.explosionViewPos[j], explosionProjectionMatrix);
+        }
 
-    output.tex = input[2].tex;
-    output.normal = input[2].normal;
-    triStream.Append(output);
+        output.tex = input[i].tex;
+        output.normal = vertexNormal;
+        triStream.Append(output);
+    }
 
     triStream.RestartStrip();
 	  
@@ -136,8 +110,11 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
         output.position = mul(vposition, worldMatrix);
         output.position = mul(output.position, viewMatrix);
         output.position = mul(output.position, projectionMatrix);
+
+        output.depthPosition = output.position;
+
         output.tex = texCoords[i];
-        output.normal = forward;
+        output.normal = -forward;
         triStream.Append(output);
     }
 

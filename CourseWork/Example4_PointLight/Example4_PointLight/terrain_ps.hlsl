@@ -19,7 +19,8 @@ struct InputType
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
     float4 worldPosition : TEXCOORD1;
-    float4 explosionViewPos[6] : TEXCOORD2;
+    float4 depthPosition : TEXCOORD2;
+    float4 explosionViewPos[6] : TEXCOORD3;
 };
 
 float4 calculateLighting(float3 lightDirection, float3 normal, float4 ldiffuse)
@@ -35,8 +36,15 @@ struct PS_OUTPUT
     float4 cameraDepth : SV_Target1;
 };
 
-float4 main(InputType input) : SV_TARGET
+float4 main(InputType input) : SV_Target
 {
+
+    if (ambient.w == -1.0f)
+    {
+        float outputDepthColour = input.depthPosition.z / input.depthPosition.w;
+        return float4(outputDepthColour, outputDepthColour, outputDepthColour, 1.0f);
+
+    }
 
     float depthValue;
     float lightDepthValue;
@@ -93,5 +101,5 @@ float4 main(InputType input) : SV_TARGET
         colour = saturate(colour + ambient[0]);
         return colour * textureColour;
     }
-
+    //output.cameraDepth = float4(outputDepthColour, outputDepthColour, outputDepthColour, 1.0f);
 }

@@ -177,6 +177,9 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 	lightPtr = (LightBufferType*)mappedResource.pData;
 
 	lightPtr->ambient = explosion->getLight()->getAmbientColour();
+	if (!grassTexture) {
+		lightPtr->ambient.w = -1.0f;
+	}
 	lightPtr->diffuse = explosion->getLight()->getDiffuseColour();
 	lightPtr->direction = float3_to_float4(explosion->getLight()->getDirection());
 	lightPtr->position = float3_to_float4(explosion->getLight()->getPosition());

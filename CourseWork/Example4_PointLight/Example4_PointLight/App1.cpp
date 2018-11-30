@@ -159,7 +159,10 @@ void App1::depthPass(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, RenderTextu
 	
 	// Render floor
 	//terrain->sendData(renderer->getDeviceContext());
-	//depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	//terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, nullptr, textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, 1, camera->getPosition(), timeTrack, windPos);
+	//terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
+
+	//depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
 	//depthShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
 	// Render test plane
@@ -184,13 +187,13 @@ void App1::depthPass(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, RenderTextu
 RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 {
 	// Multiple render targets (change output in pixel shader too)
-	/*ID3D11RenderTargetView* renderViews[2];
-	renderViews[0] = targetTexture->getRenderTargetView();
-	renderViews[1] = cameraDepthTexture->getRenderTargetView();
-	renderer->getDeviceContext()->OMSetRenderTargets(2, renderViews, targetTexture->getDepthStencilView());
-	targetTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
-	cameraDepthTexture->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
-	lightDepth->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 1.0f, 0.0f, 1.0f);*/
+	//ID3D11RenderTargetView* renderViews[2];
+	//renderViews[0] = inputTexture->getRenderTargetView();
+	//renderViews[1] = cameraDepthTexture->getRenderTargetView();
+	//renderer->getDeviceContext()->OMSetRenderTargets(2, renderViews, inputTexture->getDepthStencilView());
+	//inputTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
+	//cameraDepthTexture->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
+	//lightDepth->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 1.0f, 0.0f, 1.0f);
 
 	
 	inputTexture->setRenderTarget(renderer->getDeviceContext());
@@ -356,7 +359,7 @@ bool App1::render()
 	RenderTexture* currentTexture;
 	currentTexture = FirstPass(targetTexture);
 	
-	currentTexture = debugTexture = HorizontalBlur(currentTexture);
+	currentTexture = HorizontalBlur(currentTexture);
 	currentTexture = VerticalBlur(currentTexture);
 	currentTexture = DoFPass(currentTexture);
 
