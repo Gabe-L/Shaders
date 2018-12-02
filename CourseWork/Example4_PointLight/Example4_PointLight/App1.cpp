@@ -25,6 +25,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture("mud", L"res/mud.jpg");
 	textureMgr->loadTexture("compose", L"res/smoke-compose.png");
 	textureMgr->loadTexture("burn", L"res/burn.png");
+	textureMgr->loadTexture("zepplin", L"res/Zepplin/zepp_col.jpg");
 
 	// Create Mesh object and shader object for terrain
 	int terrainScale = 25;
@@ -61,6 +62,9 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	camera->setPosition(55.f, 6.0f, 55.f);
 
+	// Zepplin
+	zepplin = new Model(renderer->getDevice(), renderer->getDeviceContext(), "res/Zepplin/zepplin_tri.obj");
+
 	// Explosion
 	explosionShader = new ExplosionShader(renderer->getDevice(), hwnd);
 	explosion = new Explosion(terrainDimensions, renderer->getDevice(), renderer->getDeviceContext(), hwnd, explosionShader, depthShader);
@@ -73,6 +77,20 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	verticalBlurTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 	cameraDepth = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 	DoFTexture = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+
+	// Spot light
+	zepplinPos = XMFLOAT3(25.f, 30.0f, 55.f);
+
+	spotLight = new Light;
+	spotLight->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
+	spotLight->setDiffuseColour(1.0f, 1.0f, 0.0f, 1.0f);
+	spotLight->setDirection(0.7f, -0.7f, 0.0f);
+	spotLight->setPosition(45.f , 20.0f, 55.f);
+	spotLight->generateProjectionMatrix(0.1f, 100.f);
+	spotLight->generateViewMatrix();
+	
+	spotLightDepth = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+
 }
 
 
@@ -204,6 +222,8 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 
 	// Generate the view matrix based on the camera's position.
 	camera->update();
+	spotLight->setPosition(zepplinPos.x, zepplinPos.y, zepplinPos.z);
+	spotLight->generateViewMatrix();
 
 	// Get the world, view, projection, and ortho matrices from the camera and Direct3D objects.
 	worldMatrix = renderer->getWorldMatrix();
@@ -221,19 +241,25 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 	if (windPos.z > terrainDimensions) { windPos.z = 0.0f; }
 
 	terrain->sendData(renderer->getDeviceContext());
-	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion,tessFactor, camera->getPosition(), timeTrack, windPos);
+	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, tessFactor, camera->getPosition(), timeTrack, windPos, spotLight, spotLightDepth->getShaderResourceView());
 	terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
 	// Render test plane
 	testPlane->sendData(renderer->getDeviceContext());
-	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), explosion);
+	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), explosion, spotLight, spotLightDepth->getShaderResourceView());
 	lightShader->render(renderer->getDeviceContext(), testPlane->getIndexCount());
+
+	// Render zepplin
+	worldMatrix = XMMatrixTranslation(zepplinPos.x, zepplinPos.y, zepplinPos.z);
+	zepplin->sendData(renderer->getDeviceContext());
+	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("zepplin"), explosion, spotLight, spotLightDepth->getShaderResourceView());
+	lightShader->render(renderer->getDeviceContext(), zepplin->getIndexCount());
 
 	// Render test cube
 	worldMatrix = XMMatrixTranslation(55.f, 3.0f, 57.f);
 
 	cubeMesh->sendData(renderer->getDeviceContext());
-	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), explosion);
+	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), explosion, spotLight, spotLightDepth->getShaderResourceView());
 	lightShader->render(renderer->getDeviceContext(), cubeMesh->getIndexCount());
 
 	// Render explosion
@@ -349,10 +375,11 @@ void App1::FinalPass(RenderTexture* inputTexture)
 
 bool App1::render()
 {
-	// Gather depth info from lights
+	// Gather depth info from explosion point light, spot light and camera
 	for (int i = 0; i < 6; i++) {
 		depthPass(explosion->GenerateView(i), explosion->getLight()->getProjectionMatrix(), explosion->getShadowMap(i));
 	}
+	depthPass(spotLight->getViewMatrix(), spotLight->getProjectionMatrix(), spotLightDepth);
 
 	depthPass(camera->getViewMatrix(), renderer->getProjectionMatrix(), cameraDepth);
 
@@ -365,7 +392,7 @@ bool App1::render()
 
 	// Pass in texture to be rendered to screen. Debug texture can be used here
 	if (testRender) {
-		FinalPass(explosion->shadowMaps[4]);
+		FinalPass(targetTexture);
 	}
 	else {
 		FinalPass(currentTexture);
@@ -388,9 +415,9 @@ void App1::gui()
 
 	ImGui::SliderInt("Tessellation Factor: ", &tessFactor, 1, 64);
 
-	ImGui::SliderFloat("Light X: ", &windPos.x, 40, 60.0f);
-	ImGui::SliderFloat("Light Y: ", &windPos.y, 0.0f, 10.0f);
-	ImGui::SliderFloat("Light Z: ", &windPos.z, 40.f, 60.0f);
+	ImGui::SliderFloat("Zepp X: ", &zepplinPos.x, 0.0f, 100.0f);
+	ImGui::SliderFloat("Zepp Y: ", &zepplinPos.y, 0.0f, 50.0f);
+	ImGui::SliderFloat("Zepp Z: ", &zepplinPos.z, 40.f, 60.0f);
 
 	ImGui::Checkbox("Render Test", &testRender);
 

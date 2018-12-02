@@ -61,6 +61,9 @@ private:
 	ShadowShader* shadowShader;
 	LightShader* lightShader;
 
+	Light* spotLight;
+	RenderTexture* spotLightDepth;
+
 	// Test cube
 	CubeMesh* cubeMesh;
 	XMFLOAT3 lightPos;
@@ -77,6 +80,10 @@ private:
 	RenderTexture* verticalBlurTexture;
 	RenderTexture* cameraDepth;
 	RenderTexture* DoFTexture;
+
+	// Zepplin
+	Model* zepplin;
+	XMFLOAT3 zepplinPos;
 
 	// Testing purposes
 	int terrainDimensions;

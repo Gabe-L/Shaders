@@ -42,39 +42,38 @@ ConstantOutputType PatchConstantFunction(InputPatch<InputType, 4> inputPatch, ui
     // Gets planar distance of camera
     float distance = pow(cameraPosition.x - avgPos.x, 2) + pow(cameraPosition.z - avgPos.z, 2);
     distance = sqrt(distance);
-    distance /= 2;
 
-    if (distance < 50.0f)
+    //if (distance < 50.0f)
     {
         // Set the tessellation factors for the three edges of the triangle.
-        output.edges[0] = tessFactor;
-        output.edges[1] = tessFactor;
-        output.edges[2] = tessFactor;
-        output.edges[3] = tessFactor;
+        output.edges[0] = tessFactor * (1 - (log(distance / 250) + 1));
+        output.edges[1] = tessFactor * (1 - (log(distance / 250) + 1));
+        output.edges[2] = tessFactor * (1 - (log(distance / 250) + 1));
+        output.edges[3] = tessFactor * (1 - (log(distance / 250) + 1));
 
     // Set the tessellation factor for tessallating inside the triangle.
-        output.inside[1] = tessFactor;
-        output.inside[0] = tessFactor;
+        output.inside[1] = tessFactor * (1 - (log(distance / 250) + 1));
+        output.inside[0] = tessFactor * (1 - (log(distance / 250) + 1));
     }
-    else
-    {
-    // Set the tessellation factors for the three edges of the triangle.
-        output.edges[0] = tessFactor / distance;
-        output.edges[1] = tessFactor / distance;
-        output.edges[2] = tessFactor / distance;
-        output.edges[3] = tessFactor / distance;
+    //else
+    //{
+    //// Set the tessellation factors for the three edges of the triangle.
+    //    output.edges[0] = tessFactor / 2;
+    //    output.edges[1] = tessFactor / 2;
+    //    output.edges[2] = tessFactor / 2;
+    //    output.edges[3] = tessFactor / 2;
 
-    // Set the tessellation factor for tessallating inside the triangle.
-        output.inside[1] = tessFactor / distance;
-        output.inside[0] = tessFactor / distance;
-    }
+    //// Set the tessellation factor for tessallating inside the triangle.
+    //    output.inside[1] = tessFactor / 2;
+    //    output.inside[0] = tessFactor / 2;
+    //}
 
     return output;
 }
 
 
 [domain("quad")]
-[partitioning("integer")]
+[partitioning("fractional_odd")]
 [outputtopology("triangle_ccw")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("PatchConstantFunction")]

@@ -17,6 +17,8 @@ private:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX projection;
+		XMMATRIX spotLightProjection;
+		XMMATRIX spotLightView;
 		XMMATRIX explosionLightProjections;
 		XMMATRIX explosionLightViews[6];
 	};
@@ -29,10 +31,10 @@ private:
 
 	struct LightBufferType
 	{
-		XMFLOAT4 ambient;
-		XMFLOAT4 diffuse;
-		XMFLOAT4 direction;
-		XMFLOAT4 position;
+		XMFLOAT4 ambient[2];
+		XMFLOAT4 diffuse[2];
+		XMFLOAT4 direction[2];
+		XMFLOAT4 position[2];
 	};
 
 	struct camBufferType
@@ -47,7 +49,7 @@ public:
 	TerrainShader(ID3D11Device* device, HWND hwnd);
 	~TerrainShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, Explosion* explosion, float tesselationFactor, XMFLOAT3 cameraPosition, float time, XMFLOAT3 windPos);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, Explosion* explosion, float tesselationFactor, XMFLOAT3 cameraPosition, float time, XMFLOAT3 windPos, Light* spotLight, ID3D11ShaderResourceView* spotLightDepth);
 
 private:
 	void initShader(WCHAR* vsFilename, WCHAR* psFilename);

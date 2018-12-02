@@ -15,7 +15,7 @@ Explosion::Explosion(int _terrainDimensions, ID3D11Device* _device, ID3D11Device
 	worldPosition = XMFLOAT3(55.0f, 6.0f, 55.0f);
 
 	explosionPointLight = new Light;
-	explosionPointLight->setAmbientColour(0.1f, 0.1f, 0.1f, 1.0f);
+	explosionPointLight->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
 	explosionPointLight->setDiffuseColour(startDiffuse.x, startDiffuse.y, startDiffuse.z, 1.0f);
 	explosionPointLight->setPosition(worldPosition.x, worldPosition.y, worldPosition.z);
 	explosionPointLight->generateProjectionMatrix(0.1f, 100.f);
@@ -57,14 +57,13 @@ void Explosion::Update(float deltaTime)
 {
 	explosionPointLight->setPosition(worldPosition.x, worldPosition.y, worldPosition.z);
 
-	explosionTimer = 1.0f;
-	//explosionTimer += deltaTime;
+	explosionTimer += deltaTime;
 
 	if (explosionTimer > 3.0f) {
 		explosionTimer = 0.0f;
 
-		float xRand = 10 + (std::rand() % ((terrainDimensions - 10) - 10 + 1));
-		float zRand = 10 + (std::rand() % ((terrainDimensions - 10) - 10 + 1));
+		float xRand = 10 + (std::rand() % ((terrainDimensions / 2 - 10) - 10 + 1));
+		float zRand = 10 + (std::rand() % ((terrainDimensions / 2 - 10) - 10 + 1));
 		float yRand = 20 + (std::rand() % (30 - 20 + 1));
 
 
@@ -91,6 +90,10 @@ void Explosion::Render(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11Sha
 			startDiffuse.y * min((3.0f - explosionTimer) / 2.0f, 1.0f),
 			startDiffuse.z * min((3.0f - explosionTimer) / 2.0f, 1.0f));
 	}
+
+	XMMATRIX scaleMat = XMMatrixScaling(5, 5, 5);
+
+	worldMatrix = XMMatrixMultiply(scaleMat, worldMatrix);
 
 	explosionPointLight->setDiffuseColour(lightFade.x, lightFade.y, lightFade.z, 1.0f);
 

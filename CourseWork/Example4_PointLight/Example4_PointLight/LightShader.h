@@ -15,23 +15,25 @@ private:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX projection;
+		XMMATRIX spotLightProjection;
+		XMMATRIX spotLightView;
 		XMMATRIX explosionLightProjections;
 		XMMATRIX explosionLightViews[6];
 	};
 
 	struct LightBufferType
 	{
-		XMFLOAT4 ambient;
-		XMFLOAT4 diffuse;
-		XMFLOAT4 direction;
-		XMFLOAT4 position;
+		XMFLOAT4 ambient[2];
+		XMFLOAT4 diffuse[2];
+		XMFLOAT4 direction[2];
+		XMFLOAT4 position[2];
 	};
 
 public:
 	LightShader(ID3D11Device* device, HWND hwnd);
 	~LightShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, Explosion* explosion);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* texture, Explosion* explosion, Light* spotLight, ID3D11ShaderResourceView* spotLightDepth);
 
 private:
 	void initShader(WCHAR*, WCHAR*);

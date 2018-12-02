@@ -2,17 +2,18 @@
 // Calculate diffuse lighting for a single directional light (also texturing)
 
 Texture2D texture0 : register(t0);
-Texture2D explopsionShadows[6] : register (t1);
+Texture2D spotLightShadow : register(t1);
+Texture2D explopsionShadows[6] : register (t2);
 
 SamplerState sampler0 : register(s0);
 SamplerState shadowSampler : register(s1);
 
 cbuffer LightBuffer : register(b0)
 {
-	float4 ambient;
-	float4 diffuse;
-    float4 direction;
-	float4 position;
+	float4 ambient[2];
+	float4 diffuse[2];
+    float4 direction[2];
+	float4 position[2];
 };
 
 struct InputType
@@ -21,7 +22,8 @@ struct InputType
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
 	float3 worldPosition : TEXCOORD1;
-	float4 explosionViewPos[6] : TEXCOORD2;
+    float4 spotViewPos : TEXCOORD2;
+	float4 explosionViewPos[6] : TEXCOORD3;
 };
 
 // Calculate lighting intensity based on direction and normal. Combine with light colour.
@@ -36,14 +38,17 @@ float4 main(InputType input) : SV_TARGET
 {
     float depthValue;
     float lightDepthValue;
-    float shadowMapBias = 0.001f;
+    float shadowMapBias = 0.005f;
     float4 colour = float4(0.f, 0.f, 0.f, 1.f);
     float4 textureColour = texture0.Sample(sampler0, input.tex);
     int lit = 0;
+    float2 pTexCoords;
+    float3 lightVector;
 
+    // Explosion (point) light
 	for (int i = 0; i < 6; i++)
 	{
-		float2 pTexCoords = input.explosionViewPos[i].xy / input.explosionViewPos[i].w;
+		pTexCoords = input.explosionViewPos[i].xy / input.explosionViewPos[i].w;
 		pTexCoords *= float2(0.5, -0.5);
 		pTexCoords += float2(0.5f, 0.5f);
 
@@ -60,8 +65,10 @@ float4 main(InputType input) : SV_TARGET
 			// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
 			if (lightDepthValue < depthValue)
 			{
-				float3 lightVector = normalize(position.xyz - input.worldPosition);
-				colour += calculateLighting(lightVector, input.normal, diffuse);
+				lightVector = normalize(position[0].xyz - input.worldPosition);
+                float dist = length(lightVector);
+                float attenuation = 1 / (1.0f + (0.025f * dist));
+				colour += calculateLighting(lightVector, input.normal, diffuse[0]) * attenuation;
 				// Break out so multiple light values aren't given by one point light
 				lit = 1;
 				break;
@@ -70,13 +77,48 @@ float4 main(InputType input) : SV_TARGET
 		}
 	}
 
+    // Spot light
+
+    pTexCoords = input.spotViewPos.xy / input.spotViewPos.w;
+    pTexCoords *= float2(0.5, -0.5);
+    pTexCoords += float2(0.5f, 0.5f);
+
+    float2 centre = float2(0.5f, 0.5f);
+
+    float dist = pow(pTexCoords.x - centre.x, 2) + pow(pTexCoords.y - centre.y, 2);
+    dist = sqrt(dist);
+
+    if (dist < 0.4f)
+    {
+        // Determine if the projected coordinates are in the 0 to 1 range.  If not don't do lighting.
+        if (!(pTexCoords.x < 0.f || pTexCoords.x > 1.f || pTexCoords.y < 0.f || pTexCoords.y > 1.f))
+        {
+			// Sample the shadow map (get depth of geometry)
+            depthValue = spotLightShadow.Sample(shadowSampler, pTexCoords).r;
+
+			// Calculate the depth from the light.
+            lightDepthValue = input.spotViewPos.z / input.spotViewPos.w;
+            lightDepthValue -= shadowMapBias;
+
+			// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
+            if (lightDepthValue < depthValue)
+            {
+                float dist = length(position[1].xyz - input.worldPosition.xyz);
+                float attenuation = 1 / (0.5f + (0.025f * dist) + (0.0025 * pow(dist, 2)));
+                colour += calculateLighting(-direction[1].xyz, input.normal, diffuse[1]) * attenuation;
+                lit = 1;
+            }
+
+        }
+    }
+
     if (lit == 0)
     {
-        return ambient * textureColour;
+        return ambient[0] * textureColour;
     }
     else
     {
-        colour = saturate(colour + ambient);
+        colour = saturate(colour + ambient[0]);
         return colour * textureColour;
     }
 

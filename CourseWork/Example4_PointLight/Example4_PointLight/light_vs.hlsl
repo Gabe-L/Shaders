@@ -5,6 +5,8 @@ cbuffer MatrixBuffer : register(b0)
 	matrix worldMatrix;
 	matrix viewMatrix;
     matrix projectionMatrix;
+    matrix spotProjectionMatrix;
+    matrix spotViewMatrix;
 	matrix explosionProjectionMatrix;
     matrix explosionViewMatrices[6];
 };
@@ -22,7 +24,8 @@ struct OutputType
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
     float3 worldPosition : TEXCOORD1;
-    float4 explosionViewPos[6] : TEXCOORD2;
+    float4 spotViewPos : TEXCOORD2;
+    float4 explosionViewPos[6] : TEXCOORD3;
 };
 
 OutputType main(InputType input)
@@ -34,6 +37,10 @@ OutputType main(InputType input)
 	output.worldPosition = mul(input.position, worldMatrix).xyz;
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
+
+    output.spotViewPos = mul(input.position, worldMatrix);
+    output.spotViewPos = mul(output.spotViewPos, spotViewMatrix);
+    output.spotViewPos = mul(output.spotViewPos, spotProjectionMatrix);
 
 	for (int i = 0; i < 6; i++) {
 		output.explosionViewPos[i] = mul(input.position, worldMatrix);
