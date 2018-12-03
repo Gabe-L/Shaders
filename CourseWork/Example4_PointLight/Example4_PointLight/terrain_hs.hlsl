@@ -25,6 +25,7 @@ struct OutputType
     float4 position : POSITION;
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
+	float tessFactor : TEXCOORD1;
 };
 
 ConstantOutputType PatchConstantFunction(InputPatch<InputType, 4> inputPatch, uint patchId : SV_PrimitiveID)
@@ -43,17 +44,19 @@ ConstantOutputType PatchConstantFunction(InputPatch<InputType, 4> inputPatch, ui
     float distance = pow(cameraPosition.x - avgPos.x, 2) + pow(cameraPosition.z - avgPos.z, 2);
     distance = sqrt(distance);
 
+	float tessOut = tessFactor * (1 - (log(distance / 250) + 1));
+
     //if (distance < 50.0f)
     {
         // Set the tessellation factors for the three edges of the triangle.
-        output.edges[0] = tessFactor * (1 - (log(distance / 250) + 1));
-        output.edges[1] = tessFactor * (1 - (log(distance / 250) + 1));
-        output.edges[2] = tessFactor * (1 - (log(distance / 250) + 1));
-        output.edges[3] = tessFactor * (1 - (log(distance / 250) + 1));
+        output.edges[0] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
+        output.edges[1] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
+        output.edges[2] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
+        output.edges[3] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
 
     // Set the tessellation factor for tessallating inside the triangle.
-        output.inside[1] = tessFactor * (1 - (log(distance / 250) + 1));
-        output.inside[0] = tessFactor * (1 - (log(distance / 250) + 1));
+        output.inside[1] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
+        output.inside[0] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
     }
     //else
     //{
@@ -81,6 +84,18 @@ OutputType main(InputPatch<InputType, 4> patch, uint pointId : SV_OutputControlP
 {
     OutputType output;
 
+	float3 avgPos = patch[0].position;
+	avgPos += patch[1].position;
+	avgPos += patch[2].position;
+	avgPos += patch[3].position;
+
+	avgPos /= 4;
+
+	// Gets planar distance of camera
+	float distance = pow(cameraPosition.x - avgPos.x, 2) + pow(cameraPosition.z - avgPos.z, 2);
+	distance = sqrt(distance);
+
+	output.tessFactor = tessFactor * (1 - (log(distance / 250) + 1));
 
     // Set the position for this control point as the output position.
     output.position = patch[pointId].position;

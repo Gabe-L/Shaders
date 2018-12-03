@@ -75,7 +75,7 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
         }
 
         output.tex = input[i].tex;
-        output.normal = vertexNormal;
+        output.normal = input[i].normal;
         triStream.Append(output);
     }
 
@@ -86,7 +86,7 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
 
         float3 forward = normalize(camPos.xyz - input[0].position.xyz);
         float3 up = float3(0, 1, 0);
-        float3 right = cross(forward, up);
+		float3 right = cross(forward, up);
         up = cross(right, forward);
 
         right *= 0.1f;
@@ -106,7 +106,7 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
         vertPos[1] = input[0].position.xyz + (right / 2);
         //vertPos[2] = (up * 2.0f) + input[0].position.xyz + sin(input[0].position.z * input[0].position.x + time);
         float vertY;
-        vertPos[2] = (up * 2.0f) + input[0].position.xyz + (float(h + 1) / 10) * sin(input[0].position.z * input[0].position.x + time);
+		vertPos[2] = (up * 2.0f) + input[0].position.xyz + (float(h + 1) / 10) * sin(input[0].position.z * input[0].position.x + time);
         vertY = vertPos[2].y;
         vertPos[2] += distanceToWind * -windVec;
         //vertPos[2].y = vertY;

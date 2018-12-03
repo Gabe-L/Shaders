@@ -22,6 +22,7 @@ struct InputType
     float4 position : POSITION;
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
+	float tessFactor : TEXCOORD1;
 };
 
 struct OutputType
@@ -35,9 +36,11 @@ struct OutputType
 OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, const OutputPatch<InputType, 4> patch)
 {
     float4 vertexPosition;
-    float3 vertexNormal;
+    float3 vertexNormal = float3(0,0,0);
     OutputType output;
  
+	float fakeTessFactor = 10.0f;
+
     // Determine the position of the new vertex.
 	// Invert the y and Z components of uvwCoord as these coords are generated in UV space and therefore y is positive downward.
 	// Alternatively you can set the output topology of the hull shader to cw instead of ccw (or vice versa).
@@ -55,8 +58,45 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
     
     vertexPosition = lerp(v1, v2, uvwCoord.x);
 
+	float2 mods[4] = {
+		float2(-1.0f, -1.0f),
+		float2(1.0f, -1.0f),
+		float2(1.0f, 1.0f),
+		float2(-1.0f, 1.0f)
+	};
+
+	float2 texelSize = 1.0f / float2(1184, 636);
+
+	for (int i = 0; i < 4; i++) {
+		float3 nPos1, nPos2;
+
+		float avgTess = patch[0].tessFactor + patch[1].tessFactor + patch[2].tessFactor + patch[3].tessFactor;
+		avgTess /= 4;
+
+		nPos1 = vertexPosition;
+		nPos1.x += mods[i].x / avgTess;
+		nPos2 = vertexPosition;
+		nPos2.z += mods[i].y / avgTess;
+
+		nPos1.y = 10 * heightMap.SampleLevel(Sampler0, texCoord + float2((mods[i].x / avgTess) / 15.0f, 0), 0).r;
+		nPos2.y = 10 * heightMap.SampleLevel(Sampler0, texCoord + float2(0, (mods[i].y / avgTess) / 15.0f), 0).r;
+
+		/*nPos1.y = (10 * heightMap.SampleLevel(Sampler0, texCoord, 0).r);
+		nPos2.y = (10 * heightMap.SampleLevel(Sampler0, texCoord, 0).r);*/
+
+		if (i == 0 || i == 2) {
+			vertexNormal += normalize(cross(vertexPosition - nPos1, vertexPosition - nPos2));
+		}
+		else
+		{
+			vertexNormal += normalize(cross(vertexPosition - nPos2, vertexPosition - nPos1));
+		}
+	}
+
     // Calculate vertex normal base on patch positions
-    vertexNormal = cross(patch[0].position.xyz - patch[1].position.xyz, patch[0].position.xyz - patch[2].position.xyz);
+    //vertexNormal = cross(patch[0].position.xyz - patch[1].position.xyz, vertexPosition - patch[2].position.xyz);
+
+	vertexNormal /= 4;
 
     // Offset vertex based on height map
     float4 colour = heightMap.SampleLevel(Sampler0, texCoord, 0);
@@ -64,8 +104,8 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 
     // Set output data
     output.tex = texCoord;
-    output.position = vertexPosition;	
-    output.normal = vertexNormal;
+    output.position = vertexPosition;
+    output.normal = -normalize(vertexNormal);
 
     return output;
 }

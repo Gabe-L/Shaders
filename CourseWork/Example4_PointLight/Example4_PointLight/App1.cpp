@@ -247,7 +247,7 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 	// Render test plane
 	testPlane->sendData(renderer->getDeviceContext());
 	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), explosion, spotLight, spotLightDepth->getShaderResourceView());
-	lightShader->render(renderer->getDeviceContext(), testPlane->getIndexCount());
+	//lightShader->render(renderer->getDeviceContext(), testPlane->getIndexCount());
 
 	// Render zepplin
 	worldMatrix = XMMatrixTranslation(zepplinPos.x, zepplinPos.y, zepplinPos.z);

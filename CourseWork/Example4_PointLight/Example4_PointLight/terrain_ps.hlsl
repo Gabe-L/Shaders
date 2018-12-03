@@ -89,7 +89,7 @@ float4 main(InputType input) : SV_Target
                 float3 lightVector = (position[0].xyz - input.worldPosition.xyz);
                 float dist = length(lightVector);
                 float attenuation = 1 / (1.0f + (0.025f * dist));
-                colour += calculateLighting(-lightVector, input.normal, diffuse[0]) * attenuation;
+                //colour += calculateLighting(-lightVector, input.normal, diffuse[0]) * attenuation;
 				// Break out so multiple light values aren't given by one point light
                 lit = 1;
                 break;
@@ -123,8 +123,8 @@ float4 main(InputType input) : SV_Target
             if (lightDepthValue < depthValue)
             {
                 float dist = length(position[1].xyz - input.worldPosition.xyz);
-                float attenuation = 1 / (0.5f + (0.025f * dist) + (0.0025 * pow(dist, 2)));
-                colour += calculateLighting(direction[1].xyz, input.normal, diffuse[1]) * attenuation;
+				float attenuation = 1 / (0.5f + (0.025f * dist));// +(0.0025 * pow(dist, 2)));
+                colour += calculateLighting(-direction[1].xyz, input.normal, diffuse[1]) * attenuation;
                 lit = 1;
             }
 
