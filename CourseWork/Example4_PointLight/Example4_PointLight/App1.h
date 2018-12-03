@@ -42,6 +42,9 @@ protected:
 
 private:
 
+	// Skybox
+	CubeMesh* skyBox;
+
 	// Terrain
 	TessellatedPlane* terrain;
 	TerrainShader* terrainShader;
@@ -81,9 +84,12 @@ private:
 	RenderTexture* cameraDepth;
 	RenderTexture* DoFTexture;
 
-	// Zepplin
+	// Models
 	Model* zepplin;
 	XMFLOAT3 zepplinPos;
+	
+	Model* biplane;
+	XMFLOAT3 biplanePos;
 
 	// Testing purposes
 	int terrainDimensions;

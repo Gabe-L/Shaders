@@ -166,6 +166,8 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 	dataPtr->spotLightProjection = XMMatrixTranspose(spotLight->getProjectionMatrix());
 	dataPtr->spotLightView = XMMatrixTranspose(spotLight->getViewMatrix());
 
+	dataPtr->explosionLightProjections = XMMatrixTranspose(explosion->getLight()->getProjectionMatrix());
+
 	// Explosion light view info
 	for (int i = 0; i < 6; i++) {
 		dataPtr->explosionLightViews[i] = XMMatrixTranspose(explosion->GenerateView(i));

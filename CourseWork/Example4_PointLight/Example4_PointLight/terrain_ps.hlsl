@@ -32,11 +32,11 @@ float4 calculateLighting(float3 lightDirection, float3 normal, float4 ldiffuse)
     return colour;
 }
 
-struct PS_OUTPUT
-{
-    float4 colour : SV_Target0;
-    float4 cameraDepth : SV_Target1;
-};
+//struct PS_OUTPUT
+//{
+//    float4 colour : SV_Target0;
+//    float4 cameraDepth : SV_Target1;
+//};
 
 float4 main(InputType input) : SV_Target
 {
@@ -50,7 +50,7 @@ float4 main(InputType input) : SV_Target
 
     float depthValue;
     float lightDepthValue;
-    float shadowMapBias = 0.005f;
+    float shadowMapBias = 0.0001f;
     float4 colour = float4(0.f, 0.f, 0.f, 1.f);
     float4 textureColour;
     float2 pTexCoords;
@@ -84,12 +84,13 @@ float4 main(InputType input) : SV_Target
             lightDepthValue = input.explosionViewPos[i].z / input.explosionViewPos[i].w;
             lightDepthValue -= shadowMapBias;
 			// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
-            //if (lightDepthValue < depthValue)
+            if (lightDepthValue < depthValue)
             {
                 float3 lightVector = (position[0].xyz - input.worldPosition.xyz);
                 float dist = length(lightVector);
-                float attenuation = 1 / (1.0f + (0.025f * dist));
-                //colour += calculateLighting(-lightVector, input.normal, diffuse[0]) * attenuation;
+                float attenuation = 1 / (1.0f + (0.075f * dist));
+
+                colour += calculateLighting(lightVector, input.normal, diffuse[0]) * attenuation;
 				// Break out so multiple light values aren't given by one point light
                 lit = 1;
                 break;
@@ -123,7 +124,7 @@ float4 main(InputType input) : SV_Target
             if (lightDepthValue < depthValue)
             {
                 float dist = length(position[1].xyz - input.worldPosition.xyz);
-				float attenuation = 1 / (0.5f + (0.025f * dist));// +(0.0025 * pow(dist, 2)));
+				float attenuation = 1 / (1.0f + (0.025f * dist));// +(0.0025 * pow(dist, 2)));
                 colour += calculateLighting(-direction[1].xyz, input.normal, diffuse[1]) * attenuation;
                 lit = 1;
             }

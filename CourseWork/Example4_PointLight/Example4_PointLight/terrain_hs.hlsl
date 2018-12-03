@@ -44,39 +44,24 @@ ConstantOutputType PatchConstantFunction(InputPatch<InputType, 4> inputPatch, ui
     float distance = pow(cameraPosition.x - avgPos.x, 2) + pow(cameraPosition.z - avgPos.z, 2);
     distance = sqrt(distance);
 
-	float tessOut = tessFactor * (1 - (log(distance / 250) + 1));
+	float tessOut = tessFactor * (1 - (log10(distance / 250) + 1));
 
-    //if (distance < 50.0f)
-    {
-        // Set the tessellation factors for the three edges of the triangle.
-        output.edges[0] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
-        output.edges[1] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
-        output.edges[2] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
-        output.edges[3] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
+    // Set the tessellation factors for the three edges of the triangle.
+    output.edges[0] = tessOut;
+    output.edges[1] = tessOut;
+    output.edges[2] = tessOut;
+    output.edges[3] = tessOut;
 
     // Set the tessellation factor for tessallating inside the triangle.
-        output.inside[1] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
-        output.inside[0] = tessOut;//tessFactor * (1 - (log(distance / 250) + 1));
-    }
-    //else
-    //{
-    //// Set the tessellation factors for the three edges of the triangle.
-    //    output.edges[0] = tessFactor / 2;
-    //    output.edges[1] = tessFactor / 2;
-    //    output.edges[2] = tessFactor / 2;
-    //    output.edges[3] = tessFactor / 2;
-
-    //// Set the tessellation factor for tessallating inside the triangle.
-    //    output.inside[1] = tessFactor / 2;
-    //    output.inside[0] = tessFactor / 2;
-    //}
+    output.inside[1] = tessOut;
+    output.inside[0] = tessOut;
 
     return output;
 }
 
 
 [domain("quad")]
-[partitioning("fractional_odd")]
+[partitioning("integer")]
 [outputtopology("triangle_ccw")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("PatchConstantFunction")]

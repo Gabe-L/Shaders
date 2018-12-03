@@ -2,7 +2,7 @@
 
 
 
-Explosion::Explosion(int _terrainDimensions, ID3D11Device* _device, ID3D11DeviceContext* _deviceContext, HWND hwnd, ExplosionShader* _explosionShader, DepthShader* _depthShader) : terrainDimensions(_terrainDimensions), explosionTimer(0.0f), device(_device), deviceContext(_deviceContext), explosionShader(_explosionShader), depthShader(_depthShader), shadowMapWidth(4096), shadowMapHeight(4096)
+Explosion::Explosion(int _terrainDimensions, ID3D11Device* _device, ID3D11DeviceContext* _deviceContext, HWND hwnd, ExplosionShader* _explosionShader, DepthShader* _depthShader) : terrainDimensions(_terrainDimensions), explosionTimer(0.0f), device(_device), deviceContext(_deviceContext), explosionShader(_explosionShader), depthShader(_depthShader), shadowMapWidth(2048), shadowMapHeight(2048)
 {
 	explosionSphere = new SphereMesh(device, deviceContext, 100);
 
@@ -12,10 +12,10 @@ Explosion::Explosion(int _terrainDimensions, ID3D11Device* _device, ID3D11Device
 
 	startDiffuse = XMFLOAT3(1.0f, 0.5f, 0.0f);
 
-	worldPosition = XMFLOAT3(55.0f, 6.0f, 55.0f);
+	worldPosition = XMFLOAT3(55.0f, 100.0f, 55.0f);
 
 	explosionPointLight = new Light;
-	explosionPointLight->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
+	explosionPointLight->setAmbientColour(0.1f, 0.1f, 0.1f, 1.0f);
 	explosionPointLight->setDiffuseColour(startDiffuse.x, startDiffuse.y, startDiffuse.z, 1.0f);
 	explosionPointLight->setPosition(worldPosition.x, worldPosition.y, worldPosition.z);
 	explosionPointLight->generateProjectionMatrix(0.1f, 100.f);
@@ -64,7 +64,7 @@ void Explosion::Update(float deltaTime)
 
 		float xRand = 10 + (std::rand() % ((terrainDimensions / 2 - 10) - 10 + 1));
 		float zRand = 10 + (std::rand() % ((terrainDimensions / 2 - 10) - 10 + 1));
-		float yRand = 20 + (std::rand() % (30 - 20 + 1));
+		float yRand = 20 + (std::rand() % (100 - 20 + 1));
 
 
 		worldPosition = XMFLOAT3(xRand, yRand, zRand);

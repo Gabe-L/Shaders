@@ -26,6 +26,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture("compose", L"res/smoke-compose.png");
 	textureMgr->loadTexture("burn", L"res/burn.png");
 	textureMgr->loadTexture("zepplin", L"res/Zepplin/zepp_col.jpg");
+	textureMgr->loadTexture("biplane", L"res/Biplane/biplane_tex.png");
+
+
+	// Skybox
+	skyBox = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
 
 	// Create Mesh object and shader object for terrain
 	int terrainScale = 25;
@@ -62,8 +67,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	camera->setPosition(55.f, 6.0f, 55.f);
 
-	// Zepplin
+	// Zepplin & biplane
 	zepplin = new Model(renderer->getDevice(), renderer->getDeviceContext(), "res/Zepplin/zepplin_tri.obj");
+	biplane = new Model(renderer->getDevice(), renderer->getDeviceContext(), "res/Biplane/biplane_tri.obj");
+
+	biplanePos = XMFLOAT3(100.0f, 20.0f, 50.0f);
 
 	// Explosion
 	explosionShader = new ExplosionShader(renderer->getDevice(), hwnd);
@@ -82,7 +90,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	zepplinPos = XMFLOAT3(25.f, 30.0f, 55.f);
 
 	spotLight = new Light;
-	spotLight->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
+	spotLight->setAmbientColour(0.1f, 0.1f, 0.1f, 1.0f);
 	spotLight->setDiffuseColour(1.0f, 1.0f, 0.0f, 1.0f);
 	spotLight->setDirection(0.7f, -0.7f, 0.0f);
 	spotLight->setPosition(45.f , 20.0f, 55.f);
@@ -180,10 +188,18 @@ void App1::depthPass(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, RenderTextu
 	//terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, nullptr, textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, 1, camera->getPosition(), timeTrack, windPos);
 	//terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
-	//depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
-	//depthShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
+	worldMatrix = XMMatrixTranslation(zepplinPos.x, zepplinPos.y, zepplinPos.z);
+	zepplin->sendData(renderer->getDeviceContext());
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
+	depthShader->render(renderer->getDeviceContext(), zepplin->getIndexCount());
+
+	worldMatrix = XMMatrixTranslation(biplanePos.x, biplanePos.y, biplanePos.z);
+	biplane->sendData(renderer->getDeviceContext());
+	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
+	depthShader->render(renderer->getDeviceContext(), biplane->getIndexCount());
 
 	// Render test plane
+	worldMatrix = renderer->getWorldMatrix();
 	testPlane->sendData(renderer->getDeviceContext());
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
 	depthShader->render(renderer->getDeviceContext(), testPlane->getIndexCount());
@@ -215,20 +231,36 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 
 	
 	inputTexture->setRenderTarget(renderer->getDeviceContext());
-	inputTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
+	//inputTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
+	inputTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 0.0f, 1.0f);
 
 
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 
 	// Generate the view matrix based on the camera's position.
 	camera->update();
-	spotLight->setPosition(zepplinPos.x, zepplinPos.y, zepplinPos.z);
+	spotLight->setPosition(zepplinPos.x + 2, zepplinPos.y - 2, zepplinPos.z);
 	spotLight->generateViewMatrix();
+
+	biplanePos.z -= 40 * timer->getTime();
+	if (biplanePos.z < -10.0f) {
+		biplanePos.x = 20.0f + (std::rand() % ((terrainDimensions - 20) - 20 + 1));
+		biplanePos.z = terrainDimensions + 10.0f;
+	}
 
 	// Get the world, view, projection, and ortho matrices from the camera and Direct3D objects.
 	worldMatrix = renderer->getWorldMatrix();
 	viewMatrix = camera->getViewMatrix();
 	projectionMatrix = renderer->getProjectionMatrix();
+
+	renderer->setZBuffer(false);
+
+	//worldMatrix = XMMatrixTranslation(camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
+	skyBox->sendData(renderer->getDeviceContext());
+	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("mud"));
+	textureShader->render(renderer->getDeviceContext(), skyBox->getIndexCount());
+
+	renderer->setZBuffer(true);
 
 	// Send geometry data, set shader parameters, render object with shader
 	timeTrack += timer->getTime();
@@ -239,7 +271,9 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 
 	if (windPos.x > terrainDimensions) { windPos.x = 0.0f; }
 	if (windPos.z > terrainDimensions) { windPos.z = 0.0f; }
-
+	
+	worldMatrix = renderer->getWorldMatrix();
+	
 	terrain->sendData(renderer->getDeviceContext());
 	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, tessFactor, camera->getPosition(), timeTrack, windPos, spotLight, spotLightDepth->getShaderResourceView());
 	terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
@@ -254,6 +288,12 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 	zepplin->sendData(renderer->getDeviceContext());
 	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("zepplin"), explosion, spotLight, spotLightDepth->getShaderResourceView());
 	lightShader->render(renderer->getDeviceContext(), zepplin->getIndexCount());
+
+	// Render biplane
+	worldMatrix = XMMatrixTranslation(biplanePos.x, biplanePos.y, biplanePos.z);
+	biplane->sendData(renderer->getDeviceContext());
+	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("biplane"), explosion, spotLight, spotLightDepth->getShaderResourceView());
+	lightShader->render(renderer->getDeviceContext(), biplane->getIndexCount());
 
 	// Render test cube
 	worldMatrix = XMMatrixTranslation(55.f, 3.0f, 57.f);
@@ -392,7 +432,7 @@ bool App1::render()
 
 	// Pass in texture to be rendered to screen. Debug texture can be used here
 	if (testRender) {
-		FinalPass(targetTexture);
+		FinalPass(explosion->getShadowMap(1));
 	}
 	else {
 		FinalPass(currentTexture);
@@ -415,9 +455,9 @@ void App1::gui()
 
 	ImGui::SliderInt("Tessellation Factor: ", &tessFactor, 1, 64);
 
-	ImGui::SliderFloat("Zepp X: ", &zepplinPos.x, 0.0f, 100.0f);
-	ImGui::SliderFloat("Zepp Y: ", &zepplinPos.y, 0.0f, 50.0f);
-	ImGui::SliderFloat("Zepp Z: ", &zepplinPos.z, 40.f, 60.0f);
+	ImGui::SliderFloat("Zepp X: ", &zepplinPos.x, 0.0f, 250.0f);
+	ImGui::SliderFloat("Zepp Y: ", &zepplinPos.y, 0.0f, 100.0f);
+	ImGui::SliderFloat("Zepp Z: ", &zepplinPos.z, 40.f, 250.0f);
 
 	ImGui::Checkbox("Render Test", &testRender);
 

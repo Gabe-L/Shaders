@@ -60,6 +60,9 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
         output.position = mul(output.position, viewMatrix);
         output.position = mul(output.position, projectionMatrix);
 
+        output.tex = input[i].tex;
+        output.normal = input[i].normal;
+
         output.depthPosition = output.position;
 
         output.spotViewPos = mul(input[i].position, worldMatrix);
@@ -74,8 +77,6 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
             output.explosionViewPos[j] = mul(output.explosionViewPos[j], explosionProjectionMatrix);
         }
 
-        output.tex = input[i].tex;
-        output.normal = input[i].normal;
         triStream.Append(output);
     }
 
