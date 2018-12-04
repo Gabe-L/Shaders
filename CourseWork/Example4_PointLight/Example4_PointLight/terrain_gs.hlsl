@@ -62,6 +62,7 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
 
         output.tex = input[i].tex;
         output.normal = input[i].normal;
+		//output.normal = -vertexNormal;
 
         output.depthPosition = output.position;
 
@@ -108,6 +109,7 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
         //vertPos[2] = (up * 2.0f) + input[0].position.xyz + sin(input[0].position.z * input[0].position.x + time);
         float vertY;
 		vertPos[2] = (up * 2.0f) + input[0].position.xyz + (float(h + 1) / 10) * sin(input[0].position.z * input[0].position.x + time);
+		//vertPos[2] = input[0].position.xyz + input[0].normal;
         vertY = vertPos[2].y;
         vertPos[2] += distanceToWind * -windVec;
         //vertPos[2].y = vertY;

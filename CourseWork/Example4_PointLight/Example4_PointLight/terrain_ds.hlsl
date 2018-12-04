@@ -66,23 +66,21 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	};
 
 	float2 texelSize = 1.0f / float2(1184, 636);
-
+	
+	float avgTess = patch[0].tessFactor + patch[1].tessFactor + patch[2].tessFactor + patch[3].tessFactor;
+	avgTess /= 4;
+	/*
+	// Method One
 	for (int i = 0; i < 4; i++) {
 		float3 nPos1, nPos2;
-
-		float avgTess = patch[0].tessFactor + patch[1].tessFactor + patch[2].tessFactor + patch[3].tessFactor;
-		avgTess /= 4;
 
 		nPos1 = vertexPosition;
 		nPos1.x += mods[i].x / avgTess;
 		nPos2 = vertexPosition;
 		nPos2.z += mods[i].y / avgTess;
 
-		nPos1.y = 10 * heightMap.SampleLevel(Sampler0, texCoord + float2((mods[i].x / avgTess) / 15.0f, 0), 0).r;
-		nPos2.y = 10 * heightMap.SampleLevel(Sampler0, texCoord + float2(0, (mods[i].y / avgTess) / 15.0f), 0).r;
-
-		/*nPos1.y = (10 * heightMap.SampleLevel(Sampler0, texCoord, 0).r);
-		nPos2.y = (10 * heightMap.SampleLevel(Sampler0, texCoord, 0).r);*/
+		nPos1.y = 10 * heightMap.SampleLevel(Sampler0, texCoord + float2((mods[i].x / 25.0f) / avgTess, 0), 0).r;
+		nPos2.y = 10 * heightMap.SampleLevel(Sampler0, texCoord + float2(0, (mods[i].y / 25.0f) / avgTess), 0).r;
 
 		if (i == 0 || i == 2) {
 			vertexNormal += normalize(cross(vertexPosition - nPos1, vertexPosition - nPos2));
@@ -93,10 +91,34 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 		}
 	}
 
+	vertexNormal /= 4;
+	*/
+
+	// Method Two
+	float3 A = vertexPosition;
+	A.x += 1.0f / avgTess;
+	A.y = 10 * heightMap.SampleLevel(Sampler0, texCoord + float2((1.0f / 25.0f) / avgTess, 0), 0).r;
+
+	float3 B = vertexPosition;
+	B.x -= 1.0f / avgTess;
+	B.y = 10 * heightMap.SampleLevel(Sampler0, texCoord - float2((1.0f / 25.0f) / avgTess, 0), 0).r;
+
+	float3 AB = normalize(B - A);
+
+	float3 C = vertexPosition;
+	C.z += 1.0f / avgTess;
+	C.y = 10 * heightMap.SampleLevel(Sampler0, texCoord + float2(0, (1.0f / 25.0f) / avgTess), 0).r;
+
+	float3 D = vertexPosition;
+	D.z -= 1.0f / avgTess;
+	D.y = 10 * heightMap.SampleLevel(Sampler0, texCoord - float2(0, (1.0f / 25.0f) / avgTess), 0).r;
+
+	float3 CD = normalize(D - C);
+
+	vertexNormal = normalize(cross(AB, CD));
+
     // Calculate vertex normal base on patch positions
     //vertexNormal = cross(patch[0].position.xyz - patch[1].position.xyz, vertexPosition - patch[2].position.xyz);
-
-	vertexNormal /= 4;
 
     // Offset vertex based on height map
     float4 colour = heightMap.SampleLevel(Sampler0, texCoord, 0);

@@ -15,7 +15,7 @@ Explosion::Explosion(int _terrainDimensions, ID3D11Device* _device, ID3D11Device
 	worldPosition = XMFLOAT3(55.0f, 100.0f, 55.0f);
 
 	explosionPointLight = new Light;
-	explosionPointLight->setAmbientColour(0.1f, 0.1f, 0.1f, 1.0f);
+	explosionPointLight->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
 	explosionPointLight->setDiffuseColour(startDiffuse.x, startDiffuse.y, startDiffuse.z, 1.0f);
 	explosionPointLight->setPosition(worldPosition.x, worldPosition.y, worldPosition.z);
 	explosionPointLight->generateProjectionMatrix(0.1f, 100.f);

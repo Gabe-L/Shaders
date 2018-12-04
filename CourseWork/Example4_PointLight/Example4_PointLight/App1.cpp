@@ -28,7 +28,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture("zepplin", L"res/Zepplin/zepp_col.jpg");
 	textureMgr->loadTexture("biplane", L"res/Biplane/biplane_tex.png");
 
-
 	// Skybox
 	skyBox = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
 
@@ -239,6 +238,7 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 
 	// Generate the view matrix based on the camera's position.
 	camera->update();
+	//camera->setPosition(biplanePos.x, biplanePos.y + 1.2f, biplanePos.z - 1.5f);
 	spotLight->setPosition(zepplinPos.x + 2, zepplinPos.y - 2, zepplinPos.z);
 	spotLight->generateViewMatrix();
 
@@ -425,6 +425,8 @@ bool App1::render()
 
 	RenderTexture* currentTexture;
 	currentTexture = FirstPass(targetTexture);
+	// Disable wireframe
+	renderer->setWireframeMode(false);
 	
 	currentTexture = HorizontalBlur(currentTexture);
 	currentTexture = VerticalBlur(currentTexture);
