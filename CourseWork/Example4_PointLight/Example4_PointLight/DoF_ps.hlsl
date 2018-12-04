@@ -39,12 +39,12 @@ float4 main(InputType input) : SV_TARGET
     Dist *= (Far - Near);
     depthVal *= (Far - Near);
 
-    float far = Far / (Far - Near);
+   /* float far = Far / (Far - Near);
 
     float Dz = -Near * far;
     Dz /= Dist * -far;
 
-    float blurVal = saturate(abs(Dz - depthVal) / Range);
+    float blurVal = saturate(abs(Dz - depthVal) / Range);*/
 
 	// Get difference between current fragment and focal distance, divide by range for 
     float diff = abs((depthVal - Dist) / Range);

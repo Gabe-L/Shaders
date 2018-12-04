@@ -32,6 +32,12 @@ DoFShader::~DoFShader()
 		layout = 0;
 	}
 
+	if (dofBuffer)
+	{
+		dofBuffer->Release();
+		dofBuffer = 0;
+	}
+
 	//Release base shader components
 	BaseShader::~BaseShader();
 }

@@ -4,6 +4,8 @@
 
 // Includes
 #include "DXF.h"	// include dxframework
+
+// Shader header files
 #include "ExplosionShader.h"
 #include "LightShader.h"
 #include "TerrainShader.h"
@@ -12,10 +14,14 @@
 #include "BlurShader.h"
 #include "DepthShader.h"
 #include "DoFShader.h"
+
+// Mesh header files
 #include "TessellatedPlane.h"
 #include "OrthoMesh.h"
 #include "CubeMesh.h"
 #include "SphereMesh.h"
+
+// Misc header files
 #include "Explosion.h"
 
 class App1 : public BaseApplication
@@ -38,17 +44,14 @@ protected:
 	RenderTexture* HorizontalBlur(RenderTexture* inputTexture);
 	RenderTexture* VerticalBlur(RenderTexture* inputTexture);
 	RenderTexture* DoFPass(RenderTexture* inputTexture);
+
 	void FinalPass(RenderTexture* inputTexture);
 
 private:
 
-	// Skybox
-	CubeMesh* skyBox;
-
 	// Terrain
 	TessellatedPlane* terrain;
 	TerrainShader* terrainShader;
-	XMFLOAT3 windPos;
 	int tessFactor;
 	
 	// Post processing
@@ -94,7 +97,6 @@ private:
 	// Testing purposes
 	int terrainDimensions;
 	RenderTexture* debugTexture;
-	PlaneMesh* testPlane;
 	bool testRender = false;
 };
 

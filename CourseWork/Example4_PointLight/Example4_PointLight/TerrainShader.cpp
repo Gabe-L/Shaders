@@ -145,7 +145,7 @@ XMFLOAT4 float3_to_float4(XMFLOAT3 input, float w_val = 0.f) //converts a float3
 	return XMFLOAT4(input.x, input.y, input.z, w_val);
 }
 
-void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, Explosion* explosion, float tesselationFactor, XMFLOAT3 cameraPosition, float time, XMFLOAT3 windPos, Light* spotLight, ID3D11ShaderResourceView* spotLightDepth)
+void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, Explosion* explosion, float tesselationFactor, XMFLOAT3 cameraPosition, float time, Light* spotLight, ID3D11ShaderResourceView* spotLightDepth)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -184,9 +184,6 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 
 	// Explosion (point) light
 	lightPtr->ambient[0] = explosion->getLight()->getAmbientColour();
-	if (!grassTexture) {
-		lightPtr->ambient[0].w = -1.0f;
-	}
 	lightPtr->diffuse[0] = explosion->getLight()->getDiffuseColour();
 	lightPtr->direction[0] = float3_to_float4(explosion->getLight()->getDirection());
 	lightPtr->position[0] = float3_to_float4(explosion->getLight()->getPosition());
@@ -215,7 +212,7 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 
 	camPtr->camPos = float3_to_float4(cameraPosition);
 	camPtr->time = time;
-	camPtr->windPos = windPos;
+	camPtr->padding = XMFLOAT3(1, 1, 1);
 
 	deviceContext->Unmap(camBuffer, 0);
 	deviceContext->GSSetConstantBuffers(1, 1, &camBuffer);

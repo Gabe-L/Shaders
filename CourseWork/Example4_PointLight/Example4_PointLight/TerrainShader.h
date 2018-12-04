@@ -41,7 +41,7 @@ private:
 	{
 		XMFLOAT4 camPos;
 		float time;
-		XMFLOAT3 windPos;
+		XMFLOAT3 padding;
 	};
 
 public:
@@ -49,7 +49,7 @@ public:
 	TerrainShader(ID3D11Device* device, HWND hwnd);
 	~TerrainShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, Explosion* explosion, float tesselationFactor, XMFLOAT3 cameraPosition, float time, XMFLOAT3 windPos, Light* spotLight, ID3D11ShaderResourceView* spotLightDepth);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &world, const XMMATRIX &view, const XMMATRIX &projection, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, Explosion* explosion, float tesselationFactor, XMFLOAT3 cameraPosition, float time, Light* spotLight, ID3D11ShaderResourceView* spotLightDepth);
 
 private:
 	void initShader(WCHAR* vsFilename, WCHAR* psFilename);

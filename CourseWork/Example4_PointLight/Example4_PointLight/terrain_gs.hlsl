@@ -14,7 +14,7 @@ cbuffer CamBuffer : register(b1)
 {
     float4 camPos;
     float time;
-    float3 windPos;
+	float3 padding;
 }
 
 cbuffer TexCoordBuffer
@@ -94,25 +94,11 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
         right *= 0.1f;
         up *= 0.5f;
 
-        float3 windVec = normalize(windPos - input[0].position.xyz);
-        float distanceToWind = sqrt(pow(windPos.x - input[0].position.x, 2) + pow(windPos.y - input[0].position.y, 2));
-
-        // Only keep distance value between 0 and 10
-        distanceToWind -= 10.0f;
-        distanceToWind = min(distanceToWind, 0.0f);
-        distanceToWind *= -1.0f;
-        distanceToWind /= 10.0f;
-
         float3 vertPos[3];
         vertPos[0] = input[0].position.xyz - (right / 2);
         vertPos[1] = input[0].position.xyz + (right / 2);
-        //vertPos[2] = (up * 2.0f) + input[0].position.xyz + sin(input[0].position.z * input[0].position.x + time);
-        float vertY;
+
 		vertPos[2] = (up * 2.0f) + input[0].position.xyz + (float(h + 1) / 10) * sin(input[0].position.z * input[0].position.x + time);
-		//vertPos[2] = input[0].position.xyz + input[0].normal;
-        vertY = vertPos[2].y;
-        vertPos[2] += distanceToWind * -windVec;
-        //vertPos[2].y = vertY;
 
         for (int i = 0; i < 3; i++)
         {

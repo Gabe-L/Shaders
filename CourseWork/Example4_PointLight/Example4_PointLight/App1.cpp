@@ -7,11 +7,26 @@ App1::App1()
 	terrain = nullptr;
 	terrainShader = nullptr;
 	orthoMesh = nullptr;
+	targetTexture = nullptr;
 	textureShader = nullptr;
 	cameraDepthTexture = nullptr;
 	depthShader = nullptr;
-	cubeMesh = nullptr;
 	shadowShader = nullptr;
+	lightShader = nullptr;
+	spotLight = nullptr;
+	spotLightDepth = nullptr;
+	cubeMesh = nullptr;
+	explosion = nullptr;
+	explosionShader = nullptr;
+	blurShader = nullptr;
+	dofShader = nullptr;
+	horizontalBlurTexture = nullptr;
+	verticalBlurTexture = nullptr;
+	cameraDepth = nullptr;
+	DoFTexture = nullptr;
+	zepplin = nullptr;
+	biplane = nullptr;
+	debugTexture = nullptr;
 }
 
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
@@ -28,9 +43,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture("zepplin", L"res/Zepplin/zepp_col.jpg");
 	textureMgr->loadTexture("biplane", L"res/Biplane/biplane_tex.png");
 
-	// Skybox
-	skyBox = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
-
 	// Create Mesh object and shader object for terrain
 	int terrainScale = 25;
 	int terrainPatchSize = 10;
@@ -38,8 +50,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	terrain = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext(), terrainScale, terrainPatchSize);
 	terrainShader = new TerrainShader(renderer->getDevice(), hwnd);
-
-	windPos = XMFLOAT3(terrainDimensions, 20.0f, terrainDimensions);
 
 	// Creating mesh and shader objects for post processing
 	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);
@@ -62,7 +72,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	// Test cube
 	cubeMesh = new CubeMesh(renderer->getDevice(), renderer->getDeviceContext());
-	testPlane = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext());
 	textureMgr->loadTexture("brick", L"res/brick1.dds");
 	camera->setPosition(55.f, 6.0f, 55.f);
 
@@ -100,6 +109,12 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 }
 
+void removePointer(void* asset) {
+	if (asset) {
+		delete asset;
+		asset = 0;
+	}
+}
 
 App1::~App1()
 {
@@ -107,46 +122,29 @@ App1::~App1()
 	BaseApplication::~BaseApplication();
 
 	// Release the Direct3D objects
-
-	if (terrain) {
-		delete terrain;
-		terrain = 0;
-	}
-
-	if (terrainShader) {
-		delete terrainShader;
-		terrainShader = 0;
-	}
-
-	if (orthoMesh) {
-		delete orthoMesh;
-		orthoMesh = 0;
-	}
-
-	if (textureShader) {
-		delete textureShader;
-		textureShader = 0;
-	}
-	
-	if (cameraDepthTexture) {
-		delete cameraDepthTexture;
-		cameraDepthTexture = 0;
-	}
-
-	if (depthShader) {
-		delete depthShader;
-		depthShader = 0;
-	}
-
-	if (cubeMesh) {
-		delete cubeMesh;
-		cubeMesh = 0;
-	}
-
-	if (shadowShader) {
-		delete shadowShader;
-		shadowShader = 0;
-	}
+	removePointer(terrain);
+	removePointer(terrainShader);
+	removePointer(orthoMesh);
+	removePointer(targetTexture);
+	removePointer(textureShader);
+	removePointer(cameraDepthTexture);
+	removePointer(depthShader);
+	removePointer(shadowShader);
+	removePointer(lightShader);
+	removePointer(spotLight);
+	removePointer(spotLightDepth);
+	removePointer(cubeMesh);
+	removePointer(explosion);
+	removePointer(explosionShader);
+	removePointer(blurShader);
+	removePointer(dofShader);
+	removePointer(horizontalBlurTexture);
+	removePointer(verticalBlurTexture);
+	removePointer(cameraDepth);
+	removePointer(DoFTexture);
+	removePointer(zepplin);
+	removePointer(biplane);
+	removePointer(debugTexture);
 
 }
 
@@ -173,35 +171,24 @@ bool App1::frame()
 
 void App1::depthPass(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, RenderTexture* texture_target)
 {
-	// GENERATE VIEW MATRIX BEFORE STARTING DEPTH PASS
-
 	// Set the render target to be the render to texture.
 	texture_target->setRenderTarget(renderer->getDeviceContext());
 	texture_target->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 1.0f, 1.0f, 1.0f);
 
 	// get the world, view, and projection matrices from the camera and d3d objects.
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
-	
-	// Render floor
-	//terrain->sendData(renderer->getDeviceContext());
-	//terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, nullptr, textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, 1, camera->getPosition(), timeTrack, windPos);
-	//terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
+	// Zepplin
 	worldMatrix = XMMatrixTranslation(zepplinPos.x, zepplinPos.y, zepplinPos.z);
 	zepplin->sendData(renderer->getDeviceContext());
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
 	depthShader->render(renderer->getDeviceContext(), zepplin->getIndexCount());
 
+	// Biplane
 	worldMatrix = XMMatrixTranslation(biplanePos.x, biplanePos.y, biplanePos.z);
 	biplane->sendData(renderer->getDeviceContext());
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
 	depthShader->render(renderer->getDeviceContext(), biplane->getIndexCount());
-
-	// Render test plane
-	worldMatrix = renderer->getWorldMatrix();
-	testPlane->sendData(renderer->getDeviceContext());
-	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
-	depthShader->render(renderer->getDeviceContext(), testPlane->getIndexCount());
 
 	// Render test cube
 	worldMatrix = XMMatrixTranslation(55.f, 3.0f, 57.f);
@@ -218,19 +205,8 @@ void App1::depthPass(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, RenderTextu
 }
 
 RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
-{
-	// Multiple render targets (change output in pixel shader too)
-	//ID3D11RenderTargetView* renderViews[2];
-	//renderViews[0] = inputTexture->getRenderTargetView();
-	//renderViews[1] = cameraDepthTexture->getRenderTargetView();
-	//renderer->getDeviceContext()->OMSetRenderTargets(2, renderViews, inputTexture->getDepthStencilView());
-	//inputTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
-	//cameraDepthTexture->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
-	//lightDepth->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 1.0f, 0.0f, 1.0f);
-
-	
+{	
 	inputTexture->setRenderTarget(renderer->getDeviceContext());
-	//inputTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
 	inputTexture->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 0.0f, 1.0f);
 
 
@@ -238,11 +214,11 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 
 	// Generate the view matrix based on the camera's position.
 	camera->update();
-	//camera->setPosition(biplanePos.x, biplanePos.y + 1.2f, biplanePos.z - 1.5f);
 	spotLight->setPosition(zepplinPos.x + 2, zepplinPos.y - 2, zepplinPos.z);
 	spotLight->generateViewMatrix();
 
 	biplanePos.z -= 40 * timer->getTime();
+
 	if (biplanePos.z < -10.0f) {
 		biplanePos.x = 20.0f + (std::rand() % ((terrainDimensions - 20) - 20 + 1));
 		biplanePos.z = terrainDimensions + 10.0f;
@@ -253,35 +229,15 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 	viewMatrix = camera->getViewMatrix();
 	projectionMatrix = renderer->getProjectionMatrix();
 
-	renderer->setZBuffer(false);
-
-	//worldMatrix = XMMatrixTranslation(camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
-	skyBox->sendData(renderer->getDeviceContext());
-	textureShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("mud"));
-	textureShader->render(renderer->getDeviceContext(), skyBox->getIndexCount());
-
-	renderer->setZBuffer(true);
-
 	// Send geometry data, set shader parameters, render object with shader
-	timeTrack += timer->getTime();
-
-	// Render terrain
-	windPos.x += timer->getTime();
-	windPos.z += timer->getTime();
-
-	if (windPos.x > terrainDimensions) { windPos.x = 0.0f; }
-	if (windPos.z > terrainDimensions) { windPos.z = 0.0f; }
+	timeTrack += timer->getTime();	
 	
+	// Render terrain
 	worldMatrix = renderer->getWorldMatrix();
 	
 	terrain->sendData(renderer->getDeviceContext());
-	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, tessFactor, camera->getPosition(), timeTrack, windPos, spotLight, spotLightDepth->getShaderResourceView());
+	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, tessFactor, camera->getPosition(), timeTrack, spotLight, spotLightDepth->getShaderResourceView());
 	terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
-
-	// Render test plane
-	testPlane->sendData(renderer->getDeviceContext());
-	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), explosion, spotLight, spotLightDepth->getShaderResourceView());
-	//lightShader->render(renderer->getDeviceContext(), testPlane->getIndexCount());
 
 	// Render zepplin
 	worldMatrix = XMMatrixTranslation(zepplinPos.x, zepplinPos.y, zepplinPos.z);
@@ -376,7 +332,7 @@ RenderTexture * App1::DoFPass(RenderTexture * inputTexture)
 	// Render for up sample
 	renderer->setZBuffer(false);
 	orthoMesh->sendData(renderer->getDeviceContext());
-	dofShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, targetTexture->getShaderResourceView(), inputTexture->getShaderResourceView(), cameraDepth->getShaderResourceView(), 1.0f, SCREEN_DEPTH, SCREEN_NEAR, 2.0f);
+	dofShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, baseViewMatrix, orthoMatrix, targetTexture->getShaderResourceView(), inputTexture->getShaderResourceView(), cameraDepth->getShaderResourceView(), 1.0f, SCREEN_DEPTH, SCREEN_NEAR, 4.0f);
 	dofShader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
 	renderer->setZBuffer(true);
 

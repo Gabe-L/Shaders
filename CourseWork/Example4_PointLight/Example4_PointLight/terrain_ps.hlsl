@@ -1,11 +1,13 @@
 SamplerState Sampler0 : register(s0);
 SamplerState shadowSampler : register(s1);
 
+// Textures
 Texture2D texture0 : register(t0);
 Texture2D grassTex : register(t1);
 Texture2D spotLightShadow : register(t2);
 Texture2D explopsionShadows[6] : register(t3);
 
+// Light info : 0 is explosion, 1 is spot light
 cbuffer LightBuffer : register(b0)
 {
     float4 ambient[2];
@@ -32,22 +34,8 @@ float4 calculateLighting(float3 lightDirection, float3 normal, float4 ldiffuse)
     return colour;
 }
 
-//struct PS_OUTPUT
-//{
-//    float4 colour : SV_Target0;
-//    float4 cameraDepth : SV_Target1;
-//};
-
 float4 main(InputType input) : SV_Target
 {
-
-    if (ambient[0].w == -1.0f)
-    {
-        float outputDepthColour = input.depthPosition.z / input.depthPosition.w;
-        return float4(outputDepthColour, outputDepthColour, outputDepthColour, 1.0f);
-
-    }
-
     float depthValue;
     float lightDepthValue;
     float shadowMapBias = 0.0001f;
@@ -63,8 +51,6 @@ float4 main(InputType input) : SV_Target
     {
         textureColour = texture0.Sample(Sampler0, input.tex);
     }
-    
-    int lit = 0;
 
     // Exlplosion (point) light
 
@@ -92,7 +78,6 @@ float4 main(InputType input) : SV_Target
 
                 colour += calculateLighting(lightVector, input.normal, diffuse[0]) * attenuation;
 				// Break out so multiple light values aren't given by one point light
-                lit = 1;
                 break;
             }
         }
@@ -126,20 +111,12 @@ float4 main(InputType input) : SV_Target
                 float dist = length(position[1].xyz - input.worldPosition.xyz);
 				float attenuation = 1 / (1.0f + (0.025f * dist));// +(0.0025 * pow(dist, 2)));
                 colour += calculateLighting(-direction[1].xyz, input.normal, diffuse[1]) * attenuation;
-                lit = 1;
             }
 
         }
     }
 
-    if (lit == 0)
-    {
-        return ambient[0] * textureColour;
-    }
-    else
-    {
-        colour = saturate(colour + ambient[0]);
-        return colour * textureColour;
-    }
-    //output.cameraDepth = float4(outputDepthColour, outputDepthColour, outputDepthColour, 1.0f);
+	colour = saturate(colour + ambient[0]);
+	return colour * textureColour;
+
 }
