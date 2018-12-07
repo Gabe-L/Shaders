@@ -25,6 +25,7 @@ cbuffer TexCoordBuffer
 		float3(0, 0.5f, 0),
 		float3(1, 0.5f, 0)
     };
+
 };
 
 struct InputType
@@ -45,7 +46,7 @@ struct OutputType
     float4 explosionViewPos[6] : TEXCOORD4;
 };
 
-[maxvertexcount(12)]
+[maxvertexcount(3)]
 void main(triangle InputType input[3], inout TriangleStream<OutputType> triStream)
 {
     OutputType output;
@@ -62,7 +63,7 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
 
         output.tex = input[i].tex;
         output.normal = input[i].normal;
-		//output.normal = -vertexNormal;
+        //output.normal = -vertexNormal;
 
         output.depthPosition = output.position;
 
@@ -82,8 +83,10 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
     }
 
     triStream.RestartStrip();
+
     for (int h = 0; h < 3; h++)
     {
+
         // Make blade of grass
 
         float3 forward = normalize(camPos.xyz - input[0].position.xyz);
@@ -123,7 +126,7 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
             }
 
             output.tex = texCoords[i];
-            output.normal = -forward;
+            output.normal = float3(-1, 0, 0);
             triStream.Append(output);
         }
 

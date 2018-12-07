@@ -38,8 +38,6 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
     float4 vertexPosition;
     float3 vertexNormal = float3(0,0,0);
     OutputType output;
- 
-	float fakeTessFactor = 10.0f;
 
     // Determine the position of the new vertex.
 	// Invert the y and Z components of uvwCoord as these coords are generated in UV space and therefore y is positive downward.
@@ -53,7 +51,7 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 
 
     // Calculate new vertex position
-    float4 v1 = lerp(patch[0].position, patch[1].position, uvwCoord.y);
+    float4 v1 = lerp(patch[0].position, patch[1].position, uvwCoord.y); 
     float4 v2 = lerp(patch[3].position, patch[2].position, uvwCoord.y);
     
     vertexPosition = lerp(v1, v2, uvwCoord.x);
@@ -64,12 +62,11 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 		float2(1.0f, 1.0f),
 		float2(-1.0f, 1.0f)
 	};
-
-	float2 texelSize = 1.0f / float2(1184, 636);
 	
 	float avgTess = patch[0].tessFactor + patch[1].tessFactor + patch[2].tessFactor + patch[3].tessFactor;
 	avgTess /= 4;
-	/*
+	
+    /*
 	// Method One
 	for (int i = 0; i < 4; i++) {
 		float3 nPos1, nPos2;
@@ -116,9 +113,6 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	float3 CD = normalize(D - C);
 
 	vertexNormal = normalize(cross(AB, CD));
-
-    // Calculate vertex normal base on patch positions
-    //vertexNormal = cross(patch[0].position.xyz - patch[1].position.xyz, vertexPosition - patch[2].position.xyz);
 
     // Offset vertex based on height map
     float4 colour = heightMap.SampleLevel(Sampler0, texCoord, 0);

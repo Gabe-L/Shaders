@@ -114,11 +114,13 @@ void ExplosionShader::setShaderParameters(ID3D11DeviceContext* deviceContext, co
 
 	XMFLOAT4 displacement;
 
+	// Animate each channel of displacement overr time
 	displacement.x = sinf((time) * (2 * 3.141f)) + 0.5f;
 	displacement.y = sinf((time + 0.33333333f) * 2 * 3.141f) + 0.5f;
 	displacement.z = sinf((time + 0.66666667f) * 2 * 3.141f) + 0.5f;
 	displacement.w = explodeOffset;
 
+	// Ensure xyz components add up to 1
 	float corr = 1.f / (displacement.x + displacement.y + displacement.z);
 
 	displacement.x *= corr;

@@ -53,36 +53,39 @@ float4 main(InputType input) : SV_Target
     }
 
     // Exlplosion (point) light
-
-    for (int i = 0; i < 6; i++)
+    
+    if (length(diffuse[0]) > 0.1f)
     {
-        pTexCoords = input.explosionViewPos[i].xy / input.explosionViewPos[i].w;
+    
+        for (int i = 0; i < 6; i++)
+        {
+            pTexCoords = input.explosionViewPos[i].xy / input.explosionViewPos[i].w;
 
-        pTexCoords *= float2(0.5, -0.5);
-        pTexCoords += float2(0.5f, 0.5f);
+            pTexCoords *= float2(0.5, -0.5);
+            pTexCoords += float2(0.5f, 0.5f);
 
 		// Determine if the projected coordinates are in the 0 to 1 range.  If not don't do lighting.
-        if (!(pTexCoords.x < 0.f || pTexCoords.x > 1.f || pTexCoords.y < 0.f || pTexCoords.y > 1.f))
-        {
-			// Sample the shadow map (get depth of geometry)
-            depthValue = explopsionShadows[i].Sample(shadowSampler, pTexCoords).r;
-			// Calculate the depth from the light.
-            lightDepthValue = input.explosionViewPos[i].z / input.explosionViewPos[i].w;
-            lightDepthValue -= shadowMapBias;
-			// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
-            if (lightDepthValue < depthValue)
+            if (!(pTexCoords.x < 0.f || pTexCoords.x > 1.f || pTexCoords.y < 0.f || pTexCoords.y > 1.f))
             {
-                float3 lightVector = (position[0].xyz - input.worldPosition.xyz);
-                float dist = length(lightVector);
-                float attenuation = 1 / (1.0f + (0.075f * dist));
+			// Sample the shadow map (get depth of geometry)
+                depthValue = explopsionShadows[i].Sample(shadowSampler, pTexCoords).r;
+			// Calculate the depth from the light.
+                lightDepthValue = input.explosionViewPos[i].z / input.explosionViewPos[i].w;
+                lightDepthValue -= shadowMapBias;
+			// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
+                if (lightDepthValue < depthValue)
+                {
+                    float3 lightVector = (position[0].xyz - input.worldPosition.xyz);
+                    float dist = length(lightVector);
+                    float attenuation = 1 / (1.0f + (0.075f * dist));
 
-                colour += calculateLighting(lightVector, input.normal, diffuse[0]) * attenuation;
+                    colour += calculateLighting(lightVector, input.normal, diffuse[0]) * attenuation;
 				// Break out so multiple light values aren't given by one point light
-                break;
+                    break;
+                }
             }
         }
     }
-
     // Spot light
     pTexCoords = input.spotViewPos.xy / input.spotViewPos.w;
     pTexCoords *= float2(0.5, -0.5);

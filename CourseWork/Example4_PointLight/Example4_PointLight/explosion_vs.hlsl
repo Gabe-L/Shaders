@@ -35,14 +35,16 @@ OutputType main(InputType input)
 {
     OutputType output;
 
+    // Sample colour from compose texure for displacement
     float4 textureColour = texture0.SampleLevel(sampler0, input.tex, 0);
 
     float displacement = 0.0f;
     
+    // Calculate displacement from texture colour
     displacement = textureColour.r * displacementFactor.r + textureColour.g * displacementFactor.g + textureColour.b * displacementFactor.b;
-
     displacement /= 3;
 
+    // Apply displacement to vertex, use progressOffset to animate over time
     float progressOffset = (1.5f * displacementFactor.w);
     input.position.xyz += input.normal * ((displacement * progressOffset) + (-1.0f + progressOffset));
 

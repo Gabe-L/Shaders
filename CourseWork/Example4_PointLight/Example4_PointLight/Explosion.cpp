@@ -57,8 +57,8 @@ void Explosion::Update(float deltaTime)
 {
 	explosionPointLight->setPosition(worldPosition.x, worldPosition.y, worldPosition.z);
 
-	//explosionTimer += deltaTime;
-	explosionTimer = 1.0f;
+	explosionTimer += deltaTime;
+
 	if (explosionTimer > 3.0f) {
 		explosionTimer = 0.0f;
 
@@ -89,6 +89,9 @@ void Explosion::Render(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11Sha
 			startDiffuse.x * min((3.0f - explosionTimer) / 2.0f, 1.0f),
 			startDiffuse.y * min((3.0f - explosionTimer) / 2.0f, 1.0f),
 			startDiffuse.z * min((3.0f - explosionTimer) / 2.0f, 1.0f));
+		if (lightFade.x <= 0.0f) {
+			return;
+		}
 	}
 
 	XMMATRIX scaleMat = XMMatrixScaling(5, 5, 5);
