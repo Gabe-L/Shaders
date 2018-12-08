@@ -15,7 +15,8 @@ cbuffer CamBuffer : register(b1)
     float4 camPos;
     float time;
     float showGrass;
-	float2 padding;
+    float bladeCount;
+	float padding;
 }
 
 cbuffer TexCoordBuffer
@@ -133,5 +134,6 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
         }
 
         triStream.RestartStrip();
+        if (h == bladeCount - 1){ return; }
     }
 }

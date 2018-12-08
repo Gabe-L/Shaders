@@ -240,7 +240,7 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 	float grassMod = showGrass ? 1.0f : 0.0f;
 
 	terrain->sendData(renderer->getDeviceContext());
-	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, tessFactor, camera->getPosition(), grassMod, timeTrack, spotLight, spotLightDepth->getShaderResourceView());
+	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, tessFactor, camera->getPosition(), grassMod, bladeCount, timeTrack, spotLight, spotLightDepth->getShaderResourceView());
 	terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
 	// Render zepplin
@@ -440,6 +440,7 @@ void App1::gui()
 
 	if (ImGui::CollapsingHeader("Grass")) {
 		ImGui::TreePush();
+		ImGui::SliderInt("Blade Count: ", &bladeCount, 1, 3);
 		ImGui::Checkbox("Show grass: ", &showGrass);
 		ImGui::TreePop();
 	}

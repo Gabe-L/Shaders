@@ -96,6 +96,7 @@ private:
 
 	// Testing purposes
 	bool showGrass = true;
+	int bladeCount = 3.0f;
 	bool pauseExplosion = false;
 	int terrainDimensions;
 	RenderTexture* debugTexture;
