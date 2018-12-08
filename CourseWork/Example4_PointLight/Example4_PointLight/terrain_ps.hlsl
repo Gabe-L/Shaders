@@ -64,15 +64,15 @@ float4 main(InputType input) : SV_Target
             pTexCoords *= float2(0.5, -0.5);
             pTexCoords += float2(0.5f, 0.5f);
 
-		// Determine if the projected coordinates are in the 0 to 1 range.  If not don't do lighting.
+		    // Determine if the projected coordinates are in the 0 to 1 range.  If not don't do lighting.
             if (!(pTexCoords.x < 0.f || pTexCoords.x > 1.f || pTexCoords.y < 0.f || pTexCoords.y > 1.f))
             {
-			// Sample the shadow map (get depth of geometry)
+			    // Sample the shadow map (get depth of geometry)
                 depthValue = explopsionShadows[i].Sample(shadowSampler, pTexCoords).r;
-			// Calculate the depth from the light.
+			    // Calculate the depth from the light.
                 lightDepthValue = input.explosionViewPos[i].z / input.explosionViewPos[i].w;
                 lightDepthValue -= shadowMapBias;
-			// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
+			    // Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
                 if (lightDepthValue < depthValue)
                 {
                     float3 lightVector = (position[0].xyz - input.worldPosition.xyz);
@@ -80,7 +80,7 @@ float4 main(InputType input) : SV_Target
                     float attenuation = 1 / (1.0f + (0.075f * dist));
 
                     colour += calculateLighting(lightVector, input.normal, diffuse[0]) * attenuation;
-				// Break out so multiple light values aren't given by one point light
+				    // Break out so multiple light values aren't given by one point light
                     break;
                 }
             }
@@ -92,32 +92,26 @@ float4 main(InputType input) : SV_Target
     pTexCoords += float2(0.5f, 0.5f);
 
     float2 centre = float2(0.5f, 0.5f);
-
     float dist = pow(pTexCoords.x - centre.x, 2) + pow(pTexCoords.y - centre.y, 2);
     dist = sqrt(dist);
 
     if (dist < 0.4f)
     {
-        // Determine if the projected coordinates are in the 0 to 1 range.  If not don't do lighting.
-        if (!(pTexCoords.x < 0.f || pTexCoords.x > 1.f || pTexCoords.y < 0.f || pTexCoords.y > 1.f))
+		// Sample the shadow map (get depth of geometry)
+        depthValue = spotLightShadow.Sample(shadowSampler, pTexCoords).r;
+
+		// Calculate the depth from the light.
+        lightDepthValue = input.spotViewPos.z / input.spotViewPos.w;
+        lightDepthValue -= shadowMapBias;
+
+		// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
+        if (lightDepthValue < depthValue)
         {
-			// Sample the shadow map (get depth of geometry)
-            depthValue = spotLightShadow.Sample(shadowSampler, pTexCoords).r;
-
-			// Calculate the depth from the light.
-            lightDepthValue = input.spotViewPos.z / input.spotViewPos.w;
-            lightDepthValue -= shadowMapBias;
-
-			// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
-            if (lightDepthValue < depthValue)
-            {
-                float dist = length(position[1].xyz - input.worldPosition.xyz);
-				float attenuation = 1 / (1.0f + (0.025f * dist));// +(0.0025 * pow(dist, 2)));
-                colour += calculateLighting(-direction[1].xyz, input.normal, diffuse[1]) * attenuation;
-            }
-
+            float dist = length(position[1].xyz - input.worldPosition.xyz);
+			float attenuation = 1 / (1.0f + (0.025f * dist));// +(0.0025 * pow(dist, 2)));
+            colour += calculateLighting(-direction[1].xyz, input.normal, diffuse[1]) * attenuation;
         }
-    }
+}
 
 	colour = saturate(colour + ambient[0]);
 	return colour * textureColour;

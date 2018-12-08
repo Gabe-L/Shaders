@@ -57,7 +57,12 @@ void Explosion::Update(float deltaTime)
 {
 	explosionPointLight->setPosition(worldPosition.x, worldPosition.y, worldPosition.z);
 
-	explosionTimer += deltaTime;
+	if (deltaTime == -1.0f) {
+		explosionTimer = 1.0f;
+	}
+	else {
+		explosionTimer += deltaTime;
+	}
 
 	if (explosionTimer > 3.0f) {
 		explosionTimer = 0.0f;

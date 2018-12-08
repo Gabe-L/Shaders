@@ -29,26 +29,19 @@ float4 main(InputType input) : SV_TARGET
     float4 normalColor = normalTexture.Sample(Sampler0, input.tex);
     float4 blurColor = blurTexture.Sample(Sampler0, input.tex);
     float depthVal = depthTexture.Sample(Sampler0, input.tex).r;
-    depthVal = 1.0f - depthVal;
-
     float Dist = depthTexture.Sample(Sampler0, float2(0.5f, 0.5f)).r;
 
+    // Invert depth and distance values
+    depthVal = 1.0f - depthVal;
     Dist = 1.0f - Dist;
 	
 	// Convert depth values to distance from near to far plane
     Dist *= (Far - Near);
     depthVal *= (Far - Near);
 
-   /* float far = Far / (Far - Near);
-
-    float Dz = -Near * far;
-    Dz /= Dist * -far;
-
-    float blurVal = saturate(abs(Dz - depthVal) / Range);*/
-
-	// Get difference between current fragment and focal distance, divide by range for 
+	// Get difference between current fragment and focal distance
     float diff = abs((depthVal - Dist) / Range);
     diff = saturate(diff);
-    float4 returnColor = lerp(normalColor, blurColor, diff);
-    return returnColor;
+
+    return lerp(normalColor, blurColor, diff);
 }

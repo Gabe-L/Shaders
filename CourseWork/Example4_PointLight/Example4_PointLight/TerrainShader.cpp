@@ -145,7 +145,7 @@ XMFLOAT4 float3_to_float4(XMFLOAT3 input, float w_val = 0.f) //converts a float3
 	return XMFLOAT4(input.x, input.y, input.z, w_val);
 }
 
-void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, Explosion* explosion, float tesselationFactor, XMFLOAT3 cameraPosition, float time, Light* spotLight, ID3D11ShaderResourceView* spotLightDepth)
+void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* grassTexture, ID3D11ShaderResourceView* heightTexture, ID3D11ShaderResourceView* mudTexture, Explosion* explosion, float tesselationFactor, XMFLOAT3 cameraPosition, float _showGrass,float time, Light* spotLight, ID3D11ShaderResourceView* spotLightDepth)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -212,7 +212,8 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 
 	camPtr->camPos = float3_to_float4(cameraPosition);
 	camPtr->time = time;
-	camPtr->padding = XMFLOAT3(1, 1, 1);
+	camPtr->showGrass = _showGrass;
+	camPtr->padding = XMFLOAT2(1, 1);
 
 	deviceContext->Unmap(camBuffer, 0);
 	deviceContext->GSSetConstantBuffers(1, 1, &camBuffer);

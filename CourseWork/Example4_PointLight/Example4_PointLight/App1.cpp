@@ -105,7 +105,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	spotLight->generateProjectionMatrix(0.1f, 100.f);
 	spotLight->generateViewMatrix();
 	
-	spotLightDepth = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+	spotLightDepth = new RenderTexture(renderer->getDevice(), 2048, 2048, SCREEN_NEAR, SCREEN_DEPTH);
 
 }
 
@@ -217,7 +217,9 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 	spotLight->setPosition(zepplinPos.x + 2, zepplinPos.y - 2, zepplinPos.z);
 	spotLight->generateViewMatrix();
 
-	biplanePos.z -= 40 * timer->getTime();
+	if (!shadowShowcase) {
+		biplanePos.z -= 40 * timer->getTime();
+	}
 
 	if (biplanePos.z < -10.0f) {
 		biplanePos.x = 20.0f + (std::rand() % ((terrainDimensions - 20) - 20 + 1));
@@ -235,8 +237,10 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 	// Render terrain
 	worldMatrix = renderer->getWorldMatrix();
 	
+	float grassMod = showGrass ? 1.0f : 0.0f;
+
 	terrain->sendData(renderer->getDeviceContext());
-	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, tessFactor, camera->getPosition(), timeTrack, spotLight, spotLightDepth->getShaderResourceView());
+	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("grass"), textureMgr->getTexture("height"), textureMgr->getTexture("mud"), explosion, tessFactor, camera->getPosition(), grassMod, timeTrack, spotLight, spotLightDepth->getShaderResourceView());
 	terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
 	// Render zepplin
@@ -259,9 +263,11 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 	lightShader->render(renderer->getDeviceContext(), cubeMesh->getIndexCount());
 
 	// Render explosion
+	float explosionTime = pauseExplosion || shadowShowcase ? -1.0f : timer->getTime();
+	
 	worldMatrix = XMMatrixTranslation(lightPos.x, lightPos.y, lightPos.z);
 
-	explosion->Update(timer->getTime());
+	explosion->Update(explosionTime);
 	explosion->Render(viewMatrix, projectionMatrix, textureMgr->getTexture("compose"), textureMgr->getTexture("burn"), timeTrack);
 
 	// Reset the render target back to the original back buffer and not the render to texture anymore.
@@ -389,8 +395,8 @@ bool App1::render()
 	currentTexture = DoFPass(currentTexture);
 
 	// Pass in texture to be rendered to screen. Debug texture can be used here
-	if (testRender) {
-		FinalPass(explosion->getShadowMap(1));
+	if (!dofOn) {
+		FinalPass(targetTexture);
 	}
 	else {
 		FinalPass(currentTexture);
@@ -406,18 +412,54 @@ void App1::gui()
 	renderer->getDeviceContext()->DSSetShader(NULL, NULL, 0);
 
 	// Build UI
-	ImGui::Text("FPS: %.2f", timer->getFPS());
-	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
-	ImGui::Text("Press E to raise camera \nto see the plane being rendered");
-	ImGui::Text("Camera Position: X-%.2f, Y-%.2f, Z%.2f", camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
+	
+	bool shadowPrev = shadowShowcase;
 
-	ImGui::SliderInt("Tessellation Factor: ", &tessFactor, 1, 64);
+	if (ImGui::CollapsingHeader("System")) {
+		ImGui::TreePush();
+		ImGui::Text("FPS: %.2f", timer->getFPS());
+		ImGui::Text("Camera Position: X-%.2f, Y-%.2f, Z%.2f", camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
+		ImGui::Checkbox("Wireframe mode", &wireframeToggle);
+		ImGui::SliderInt("Tessellation Factor: ", &tessFactor, 1, 64);
+		ImGui::Checkbox("Shadow Showcase: ", &shadowShowcase);
+		ImGui::TreePop();
+	}
 
-	ImGui::SliderFloat("Zepp X: ", &zepplinPos.x, 0.0f, 250.0f);
-	ImGui::SliderFloat("Zepp Y: ", &zepplinPos.y, 0.0f, 100.0f);
-	ImGui::SliderFloat("Zepp Z: ", &zepplinPos.z, 40.f, 250.0f);
+	if (shadowPrev != shadowShowcase) {
+		zepplinPos = XMFLOAT3(25.f, 30.0f, 55.f);
+		biplanePos = XMFLOAT3(55.0f, 22.0f, 56.0f);
+		explosion->worldPosition = XMFLOAT3(-3.0f, 76.0f, 14.0f);
+	}
 
-	ImGui::Checkbox("Render Test", &testRender);
+	if (ImGui::CollapsingHeader("Zeppelin Controls")) {
+		ImGui::TreePush();
+		ImGui::SliderFloat("Zepp X: ", &zepplinPos.x, 0.0f, 250.0f);
+		ImGui::SliderFloat("Zepp Y: ", &zepplinPos.y, 0.0f, 100.0f);
+		ImGui::SliderFloat("Zepp Z: ", &zepplinPos.z, 40.f, 250.0f);
+		ImGui::TreePop();
+	}
+
+	if (ImGui::CollapsingHeader("Grass")) {
+		ImGui::TreePush();
+		ImGui::Checkbox("Show grass: ", &showGrass);
+		ImGui::TreePop();
+	}
+
+	if (ImGui::CollapsingHeader("Explosion")) {
+		ImGui::TreePush();
+		ImGui::Checkbox("Pause Explosion: ", &pauseExplosion);
+		if (ImGui::Button("Jump to explosion")) {
+			camera->setPosition(explosion->worldPosition.x, explosion->worldPosition.y, explosion->worldPosition.z);
+		}
+		ImGui::TreePop();
+	}
+
+	if (ImGui::CollapsingHeader("Post effect")) {
+		ImGui::TreePush();
+		ImGui::Checkbox("Depth of field", &dofOn);
+		ImGui::TreePop();
+	}
+
 
 	// Render UI
 	ImGui::Render();

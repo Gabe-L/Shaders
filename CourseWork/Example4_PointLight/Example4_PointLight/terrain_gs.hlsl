@@ -14,7 +14,8 @@ cbuffer CamBuffer : register(b1)
 {
     float4 camPos;
     float time;
-	float3 padding;
+    float showGrass;
+	float2 padding;
 }
 
 cbuffer TexCoordBuffer
@@ -46,7 +47,7 @@ struct OutputType
     float4 explosionViewPos[6] : TEXCOORD4;
 };
 
-[maxvertexcount(3)]
+[maxvertexcount(12)]
 void main(triangle InputType input[3], inout TriangleStream<OutputType> triStream)
 {
     OutputType output;
@@ -84,24 +85,25 @@ void main(triangle InputType input[3], inout TriangleStream<OutputType> triStrea
 
     triStream.RestartStrip();
 
+    if (showGrass < 1.0f) { return; }
+
     for (int h = 0; h < 3; h++)
     {
 
         // Make blade of grass
-
-        float3 forward = normalize(camPos.xyz - input[0].position.xyz);
+        float3 forward = normalize(camPos.xyz - input[h].position.xyz);
         float3 up = float3(0, 1, 0);
 		float3 right = cross(forward, up);
-        up = cross(right, forward);
 
+        up = cross(right, forward);
         right *= 0.1f;
         up *= 0.5f;
 
         float3 vertPos[3];
-        vertPos[0] = input[0].position.xyz - (right / 2);
-        vertPos[1] = input[0].position.xyz + (right / 2);
-
-		vertPos[2] = (up * 2.0f) + input[0].position.xyz + (float(h + 1) / 10) * sin(input[0].position.z * input[0].position.x + time);
+        vertPos[0] = input[h].position.xyz - (right / 2);
+        vertPos[1] = input[h].position.xyz + (right / 2);
+        // "Top" vertex is animated over time
+		vertPos[2] = (up * 2.0f) + input[h].position.xyz + (float(h + 1) / 10) * sin(input[h].position.z * input[h].position.x + time);
 
         for (int i = 0; i < 3; i++)
         {

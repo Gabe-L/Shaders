@@ -95,9 +95,12 @@ private:
 	XMFLOAT3 biplanePos;
 
 	// Testing purposes
+	bool showGrass = true;
+	bool pauseExplosion = false;
 	int terrainDimensions;
 	RenderTexture* debugTexture;
-	bool testRender = false;
+	bool dofOn = true;
+	bool shadowShowcase = false;
 };
 
 #endif
