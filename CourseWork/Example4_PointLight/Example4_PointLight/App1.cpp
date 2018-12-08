@@ -418,9 +418,8 @@ void App1::gui()
 	if (ImGui::CollapsingHeader("System")) {
 		ImGui::TreePush();
 		ImGui::Text("FPS: %.2f", timer->getFPS());
-		ImGui::Text("Camera Position: X-%.2f, Y-%.2f, Z%.2f", camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
-		ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 		ImGui::SliderInt("Tessellation Factor: ", &tessFactor, 1, 64);
+		ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 		ImGui::Checkbox("Shadow Showcase: ", &shadowShowcase);
 		ImGui::TreePop();
 	}
@@ -447,10 +446,10 @@ void App1::gui()
 
 	if (ImGui::CollapsingHeader("Explosion")) {
 		ImGui::TreePush();
-		ImGui::Checkbox("Pause Explosion: ", &pauseExplosion);
 		if (ImGui::Button("Jump to explosion")) {
 			camera->setPosition(explosion->worldPosition.x, explosion->worldPosition.y, explosion->worldPosition.z);
 		}
+		ImGui::Checkbox("Pause Explosion: ", &pauseExplosion);
 		ImGui::TreePop();
 	}
 
