@@ -191,7 +191,7 @@ void App1::depthPass(XMMATRIX viewMatrix, XMMATRIX projectionMatrix, RenderTextu
 	depthShader->render(renderer->getDeviceContext(), biplane->getIndexCount());
 
 	// Render test cube
-	worldMatrix = XMMatrixTranslation(55.f, 3.0f, 57.f);
+	worldMatrix = XMMatrixTranslation(55.f, 8.0f, 57.f);
 	cubeMesh->sendData(renderer->getDeviceContext());
 	depthShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
 	depthShader->render(renderer->getDeviceContext(), cubeMesh->getIndexCount());
@@ -256,7 +256,7 @@ RenderTexture* App1::FirstPass(RenderTexture* inputTexture)
 	lightShader->render(renderer->getDeviceContext(), biplane->getIndexCount());
 
 	// Render test cube
-	worldMatrix = XMMatrixTranslation(55.f, 3.0f, 57.f);
+	worldMatrix = XMMatrixTranslation(55.f, 8.0f, 57.f);
 
 	cubeMesh->sendData(renderer->getDeviceContext());
 	lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture("brick"), explosion, spotLight, spotLightDepth->getShaderResourceView());

@@ -21,6 +21,7 @@ float4 main(InputType input) : SV_TARGET
     float prog = max(1.0f, input.progress);
     prog -= 1.0f;
 
+    // Clip vertices based on progress through explosion
     float clipVal = 0.2f + (0.3f * (1.0f - prog));
     clip(clipVal - (input.disp.x + 0.15f));
 

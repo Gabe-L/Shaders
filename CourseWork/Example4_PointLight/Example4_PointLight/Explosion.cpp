@@ -10,10 +10,13 @@ Explosion::Explosion(int _terrainDimensions, ID3D11Device* _device, ID3D11Device
 		shadowMaps[i] = new RenderTexture(device, shadowMapWidth, shadowMapHeight, 0.1f, 100.f);
 	}
 
+	// Initial light colour
 	startDiffuse = XMFLOAT3(1.0f, 0.5f, 0.0f);
 
+	// Starting position
 	worldPosition = XMFLOAT3(55.0f, 100.0f, 55.0f);
 
+	// Setup point light
 	explosionPointLight = new Light;
 	explosionPointLight->setAmbientColour(0.3f, 0.3f, 0.3f, 1.0f);
 	explosionPointLight->setDiffuseColour(startDiffuse.x, startDiffuse.y, startDiffuse.z, 1.0f);
@@ -21,6 +24,7 @@ Explosion::Explosion(int _terrainDimensions, ID3D11Device* _device, ID3D11Device
 	explosionPointLight->generateProjectionMatrix(0.1f, 100.f);
 	explosionPointLight->generateViewMatrix();
 
+	// Point light directions
 	directions[0] = XMFLOAT3(0.0f, 1.0f, 0.0f);	// Up;
 	directions[1] = XMFLOAT3(0.0f, -1.0f, 0.0f);// Down
 	directions[2] = XMFLOAT3(1.0f, 0.0f, 0.0f);	// Right
@@ -57,6 +61,7 @@ void Explosion::Update(float deltaTime)
 {
 	explosionPointLight->setPosition(worldPosition.x, worldPosition.y, worldPosition.z);
 
+	// Pause explosion halfway through if delta time indicates to
 	if (deltaTime == -1.0f) {
 		explosionTimer = 1.0f;
 	}
@@ -64,6 +69,7 @@ void Explosion::Update(float deltaTime)
 		explosionTimer += deltaTime;
 	}
 
+	// Choose new position once explosion has ended
 	if (explosionTimer > 3.0f) {
 		explosionTimer = 0.0f;
 

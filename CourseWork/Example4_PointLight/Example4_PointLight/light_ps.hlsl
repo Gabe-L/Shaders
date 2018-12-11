@@ -41,7 +41,6 @@ float4 main(InputType input) : SV_TARGET
     float shadowMapBias = 0.005f;
     float4 colour = float4(0.f, 0.f, 0.f, 1.f);
     float4 textureColour = texture0.Sample(sampler0, input.tex);
-    int lit = 0;
     float2 pTexCoords;
     float3 lightVector;
 
@@ -70,7 +69,6 @@ float4 main(InputType input) : SV_TARGET
                 float attenuation = 1 / (1.0f + (0.025f * dist));
 				colour += calculateLighting(lightVector, input.normal, diffuse[0]) * attenuation;
 				// Break out so multiple light values aren't given by one point light
-				lit = 1;
 				break;
 			}
 
@@ -78,7 +76,6 @@ float4 main(InputType input) : SV_TARGET
 	}
 
     // Spot light
-
     pTexCoords = input.spotViewPos.xy / input.spotViewPos.w;
     pTexCoords *= float2(0.5, -0.5);
     pTexCoords += float2(0.5f, 0.5f);
@@ -106,21 +103,13 @@ float4 main(InputType input) : SV_TARGET
                 float dist = length(position[1].xyz - input.worldPosition.xyz);
                 float attenuation = 1 / (0.5f + (0.025f * dist) + (0.0025 * pow(dist, 2)));
                 colour += calculateLighting(-direction[1].xyz, input.normal, diffuse[1]) * attenuation;
-                lit = 1;
             }
 
         }
     }
 
-    if (lit == 0)
-    {
-        return ambient[0] * textureColour;
-    }
-    else
-    {
-        colour = saturate(colour + ambient[0]);
-        return colour * textureColour;
-    }
+    colour = saturate(colour + ambient[0]);
+    return colour * textureColour;
 
 }
 

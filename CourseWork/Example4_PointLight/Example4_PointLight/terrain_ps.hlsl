@@ -38,7 +38,7 @@ float4 main(InputType input) : SV_Target
 {
     float depthValue;
     float lightDepthValue;
-    float shadowMapBias = 0.0001f;
+	float shadowMapBias = 0.0005f;// 0.0001f;
     float4 colour = float4(0.f, 0.f, 0.f, 1.f);
     float4 textureColour;
     float2 pTexCoords;

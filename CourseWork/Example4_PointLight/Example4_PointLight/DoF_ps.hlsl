@@ -40,7 +40,7 @@ float4 main(InputType input) : SV_TARGET
     depthVal *= (Far - Near);
 
 	// Get difference between current fragment and focal distance
-    float diff = abs((depthVal - Dist) / Range);
+    float diff = abs((depthVal - Dist));
     diff = saturate(diff);
 
     return lerp(normalColor, blurColor, diff);
